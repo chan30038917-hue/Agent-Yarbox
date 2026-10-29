@@ -169,4 +169,37 @@ contract AgentYarbox {
     function isPaymentNonceUsed(bytes32 _nonce) external view returns (bool) {
         return usedPaymentNonces[_nonce];
     }
+
+    function getMaxAmount(uint256 _id) external view returns (uint256) {
+        return intents[_id].maxAmount;
+    }
+
+    function getReceipt(uint256 _id) external view returns (
+        address agent,
+        uint64  erc8004AgentId,
+        bytes32 intentHash,
+        bytes32 conditionHash,
+        bytes32 mandateId,
+        uint256 maxAmount,
+        bytes32 paymentNonce,
+        bytes32 resultHash,
+        uint256 timestamp,
+        bool    settled,
+        bool    inconsistent
+    ) {
+        Intent storage it = intents[_id];
+        return (
+            it.agent,
+            it.erc8004AgentId,
+            it.intentHash,
+            it.conditionHash,
+            it.mandateId,
+            it.maxAmount,
+            it.paymentNonce,
+            it.resultHash,
+            it.timestamp,
+            it.settled,
+            it.inconsistent
+        );
+    }
 }

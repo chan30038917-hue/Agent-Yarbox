@@ -20,8 +20,8 @@ contract AgentYarboxTest is Test {
 
     function setUp() public {
         yarbox = new AgentYarbox(
-            address(0x1111), // paymentGate mock
-            address(0x2222)  // mandateRegistry mock
+            address(0x1111),
+            address(0x2222)
         );
     }
 
@@ -108,7 +108,6 @@ contract AgentYarboxTest is Test {
         vm.prank(agent);
         uint256 id = yarbox.commitIntent(INTENT_HASH, CONDITION_HASH, MANDATE_ID, MAX_AMOUNT, ERC8004_ID);
 
-        // Simular que ya está settled
         vm.prank(agent);
         vm.mockCall(
             address(0x1111),
@@ -131,7 +130,6 @@ contract AgentYarboxTest is Test {
 
         yarbox.settleIntent(id, PAYMENT_NONCE, RESULT_HASH);
 
-        // Intentar liquidar de nuevo
         vm.prank(agent);
         vm.expectRevert(AgentYarbox.AlreadySettled.selector);
         yarbox.settleIntent(id, PAYMENT_NONCE, RESULT_HASH);
@@ -141,7 +139,6 @@ contract AgentYarboxTest is Test {
         vm.prank(agent);
         uint256 id = yarbox.commitIntent(INTENT_HASH, CONDITION_HASH, MANDATE_ID, MAX_AMOUNT, ERC8004_ID);
 
-        // Mock: paymentNonces devuelve false (pago no existe)
         vm.mockCall(
             address(0x1111),
             abi.encodeWithSelector(IPaymentGate.paymentNonces.selector, MANDATE_ID, PAYMENT_NONCE),
@@ -160,14 +157,12 @@ contract AgentYarboxTest is Test {
         vm.prank(agent);
         uint256 id = yarbox.commitIntent(INTENT_HASH, CONDITION_HASH, MANDATE_ID, MAX_AMOUNT, ERC8004_ID);
 
-        // Mock: pago existe
         vm.mockCall(
             address(0x1111),
             abi.encodeWithSelector(IPaymentGate.paymentNonces.selector, MANDATE_ID, PAYMENT_NONCE),
             abi.encode(true)
         );
 
-        // Mock: mandato expirado
         vm.mockCall(
             address(0x2222),
             abi.encodeWithSelector(IMandateRegistry.getMandate.selector, MANDATE_ID),
@@ -177,7 +172,7 @@ contract AgentYarboxTest is Test {
                 maxPerTx: MAX_AMOUNT,
                 maxPerPeriod: MAX_AMOUNT,
                 periodSeconds: 86400,
-                validUntil: uint64(block.timestamp - 1), // expirado
+                validUntil: uint64(block.timestamp - 1),
                 nonce: bytes32(0)
             }))
         );
@@ -194,14 +189,12 @@ contract AgentYarboxTest is Test {
         vm.prank(agent);
         uint256 id = yarbox.commitIntent(INTENT_HASH, CONDITION_HASH, MANDATE_ID, MAX_AMOUNT, ERC8004_ID);
 
-        // Mock: pago existe
         vm.mockCall(
             address(0x1111),
             abi.encodeWithSelector(IPaymentGate.paymentNonces.selector, MANDATE_ID, PAYMENT_NONCE),
             abi.encode(true)
         );
 
-        // Mock: mandato válido
         vm.mockCall(
             address(0x2222),
             abi.encodeWithSelector(IMandateRegistry.getMandate.selector, MANDATE_ID),
@@ -216,11 +209,9 @@ contract AgentYarboxTest is Test {
             }))
         );
 
-        // Liquidar una vez
         vm.prank(agent);
         yarbox.settleIntent(id, PAYMENT_NONCE, RESULT_HASH);
 
-        // Intentar usar el mismo nonce en otro intent
         vm.prank(agent);
         uint256 id2 = yarbox.commitIntent(keccak256("strategy-v2"), CONDITION_HASH, MANDATE_ID, MAX_AMOUNT, ERC8004_ID);
 
@@ -233,14 +224,12 @@ contract AgentYarboxTest is Test {
         vm.prank(agent);
         uint256 id = yarbox.commitIntent(INTENT_HASH, CONDITION_HASH, MANDATE_ID, MAX_AMOUNT, ERC8004_ID);
 
-        // Mock: pago existe
         vm.mockCall(
             address(0x1111),
             abi.encodeWithSelector(IPaymentGate.paymentNonces.selector, MANDATE_ID, PAYMENT_NONCE),
             abi.encode(true)
         );
 
-        // Mock: mandato válido
         vm.mockCall(
             address(0x2222),
             abi.encodeWithSelector(IMandateRegistry.getMandate.selector, MANDATE_ID),
@@ -264,5 +253,43 @@ contract AgentYarboxTest is Test {
         assertTrue(settled);
         assertFalse(inconsistent);
         assertTrue(yarbox.isPaymentNonceUsed(PAYMENT_NONCE));
+    }
+
+    function testGetMaxAmount() public {
+        vm.prank(agent);
+        uint256 id = yarbox.commitIntent(INTENT_HASH, CONDITION_HASH, MANDATE_ID, MAX_AMOUNT, ERC8004_ID);
+
+        uint256 maxAmount = yarbox.getMaxAmount(id);
+        assertEq(maxAmount, MAX_AMOUNT);
+    }
+
+    function testGetReceipt() public {
+        vm.prank(agent);
+        uint256 id = yarbox.commitIntent(INTENT_HASH, CONDITION_HASH, MANDATE_ID, MAX_AMOUNT, ERC8004_ID);
+
+        (
+            address a,
+            uint64 eid,
+            bytes32 ih,
+            bytes32 ch,
+            bytes32 mid,
+            uint256 ma,
+            bytes32 pn,
+            bytes32 rh,
+            uint256 ts,
+            bool settled,
+            bool inconsistent
+        ) = yarbox.getReceipt(id);
+
+        assertEq(a, agent);
+        assertEq(eid, ERC8004_ID);
+        assertEq(ih, INTENT_HASH);
+        assertEq(ch, CONDITION_HASH);
+        assertEq(mid, MANDATE_ID);
+        assertEq(ma, MAX_AMOUNT);
+        assertEq(pn, bytes32(0));
+        assertEq(rh, bytes32(0));
+        assertFalse(settled);
+        assertFalse(inconsistent);
     }
 }
