@@ -78,10 +78,10 @@ AgentYarbox es un contrato inteligente que registra compromisos de intención de
 
 ---
 
-## Limitaciones conocidas (honestidad)
+## Limitaciones conocidas:
 
 - **No verifica el monto real pagado vs `maxAmount` on-chain.** `PaymentGate` no expone el monto de un pago dado su `paymentNonce`. La verificación de monto se hace **off-chain en AETHEL** antes de pagar. Si confías en AETHEL, esto es suficiente.
-- **No valida el destinatario (`recipient`) on-chain.** La lista blanca de destinatarios se gestiona off-chain en AETHEL.
+- **No valida el destinatario (`recipient`) on-chain.** La lista blanca de destinatarios se gestiona off-chain en AETHEL. Tienes que validar tu destinatario.
 - **No puede revertir pagos.** Una vez que `PaymentGate` autoriza un pago, es irreversible. AgentYarbox solo registra y verifica.
 
 ---
