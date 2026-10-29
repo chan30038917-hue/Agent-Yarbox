@@ -1,0 +1,31 @@
+{
+  "name": "@chan30/agent-yarbox",
+  "version": "1.0.1",
+  "description": "Caja de accountability para agentes autónomos en Monad. Cada intención se compromete antes de ejecutar. Cada pago se verifica contra el mandato. Cada resultado queda registrado on-chain.",
+  "keywords": [
+    "monad",
+    "agents",
+    "accountability",
+    "mandate",
+    "yarbox"
+  ],
+  "author": "chan30",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chan30038917-hue/Agent-Yarbox.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chan30038917-hue/Agent-Yarbox/issues"
+  },
+  "homepage": "https://github.com/chan30038917-hue/Agent-Yarbox#readme",
+  "files": [
+    "contracts/",
+    "script/",
+    "README.md",
+    "foundry.toml"
+  ],
+  "scripts": {
+    "test": "forge test"
+  }
+}
