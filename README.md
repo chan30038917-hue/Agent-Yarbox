@@ -98,6 +98,8 @@ cp .env.example .env
 # edita .env con tu PRIVATE_KEY, PAYMENT_GATE y MANDATE_REGISTRY
 forge script script/Deploy.s.sol:Deploy --rpc-url https://rpc.monad.xyz --broadcast
 
+
+
 Integración con AETHEL-AUTAPON
 AETHEL es el coordinador de enjambres que:
 
@@ -110,6 +112,8 @@ Obtiene el tiquete de pago (getReceipt).
 Guarda los tiquetes en formato JSONL para auditorías.
 
 Repositorio de AETHEL: github.com/chan30038917-hue/aethel-autapon
+
+
 
 Licencia
 MIT
