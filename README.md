@@ -5,6 +5,24 @@ Cada intención se compromete antes de ejecutar. Cada pago se verifica contra el
 
 ---
 
+## Índice
+
+1. [Qué es](#qué-es)
+2. [Por qué es único](#por-qué-es-único)
+3. [Contratos desplegados en Monad Mainnet](#contratos-desplegados-en-monad-mainnet)
+4. [Funciones principales](#funciones-principales)
+5. [Flujo completo](#flujo-completo)
+6. [Explorador de Accountability](#explorador-de-accountability)
+7. [SDK de JavaScript](#sdk-de-javascript)
+8. [Tests](#tests)
+9. [Limitaciones conocidas](#limitaciones-conocidas)
+10. [Instalación y despliegue](#instalación-y-despliegue)
+11. [Integración con AETHEL-AUTAPON](#integración-con-aethel-autapon)
+12. [Casos de uso](#casos-de-uso)
+13. [Licencia](#licencia)
+
+---
+
 ## Qué es
 
 **AgentYarbox** es un contrato inteligente que registra compromisos de intención de agentes autónomos y verifica que los pagos reales coincidan con lo prometido. Se integra con **PaymentGate (Mandate)** y **MandateRegistry** para verificar pagos on-chain.
@@ -28,11 +46,11 @@ En términos simples: es un **notario on-chain para agentes**. El agente dice *"
 
 ## Contratos desplegados en Monad Mainnet
 
-| Contrato | Dirección |
-|---|---|
-| **AgentYarbox** | `0x4D0D993e6FF19279dF0E69d9cd9cC946480973dC` |
-| **PaymentGate (Mandate)** | `0xc8b31cc4E238905D96AAe66A06Ebc821b4E399aD` |
-| **MandateRegistry (Mandate)** | `0x7695Cf7a86d6D08b5283a69c10f94b014D421649` |
+| Contrato | Dirección | Verificación |
+|---|---|---|
+| **AgentYarbox** | `0x4D0D993e6FF19279dF0E69d9cd9cC946480973dC` | ✅ `exact_match` |
+| **PaymentGate (Mandate)** | `0xc8b31cc4E238905D96AAe66A06Ebc821b4E399aD` | ✅ `already_verified` |
+| **MandateRegistry (Mandate)** | `0x7695Cf7a86d6D08b5283a69c10f94b014D421649` | ✅ `already_verified` |
 
 ---
 
@@ -59,64 +77,20 @@ En términos simples: es un **notario on-chain para agentes**. El agente dice *"
 
 ---
 
-## Tests
+## Explorador de Accountability
 
-**13 tests unitarios, todos pasando:**
+El explorador es una aplicación web que muestra, en tiempo real, todos los eventos del contrato `AgentYarbox`: intenciones commiteadas, pagos liquidados y casos inconsistentes. Cualquiera puede verificar on-chain lo que muestra.
 
-| Test | Qué verifica |
-|---|---|
-| `testCommitIntent` | Registra intención correctamente |
-| `testCommitIntentEmptyHash` | Falla si hash vacío |
-| `testCommitIntentEmptyMandate` | Falla si mandate vacío |
-| `testCommitIntentEmptyAmount` | Falla si amount 0 |
-| `testGetIntentsByAgent` | Devuelve IDs correctos |
-| `testSettleIntentSuccess` | Liquida correctamente |
-| `testSettleIntentNotAgent` | Falla si no es el agente |
-| `testSettleIntentAlreadySettled` | Falla si ya liquidado |
-| `testSettleIntentPaymentNotFound` | Marca inconsistente si no hay pago |
-| `testSettleIntentMandateExpired` | Marca inconsistente si expiró |
-| `testSettleIntentNonceAlreadyUsed` | Falla si nonce reusado |
-| `testGetMaxAmount` | Devuelve maxAmount correcto |
-| `testGetReceipt` | Devuelve tiquete completo |
+### Qué muestra
 
----
+- **Estadísticas**: total de eventos, commiteadas, liquidadas, inconsistentes.
+- **Tabla de eventos**: intent ID, estado, agente, monto, bloque, transacción.
+- **Tiquete de auditoría**: al hacer clic en "Ver tiquete", se muestra el `getReceipt` completo.
 
-## Limitaciones conocidas
-
-1. **No verifica el monto real pagado vs `maxAmount` on-chain.**  
-   PaymentGate no expone el monto de un pago dado su `paymentNonce`. La verificación de monto se hace off-chain en AETHEL antes de pagar. Si confías en AETHEL, esto es suficiente.
-
-2. **No valida el destinatario (`recipient`) on-chain.**  
-   La lista blanca de destinatarios se gestiona off-chain en AETHEL. Tienes que validar tu destinatario.
-
-3. **No puede revertir pagos.**  
-   Una vez que PaymentGate autoriza un pago, es irreversible. AgentYarbox solo registra y verifica.
-
----
-
-## Instalación y despliegue
+### Cómo ejecutarlo
 
 ```bash
-git clone https://github.com/chan30038917-hue/Agent-Yarbox.git
-cd Agent-Yarbox
-forge install foundry-rs/forge-std
-forge build
-forge test
-cp .env.example .env
-# edita .env con tu PRIVATE_KEY, PAYMENT_GATE y MANDATE_REGISTRY
-forge script script/Deploy.s.sol:Deploy --rpc-url https://rpc.monad.xyz --broadcast
-Integración con AETHEL-AUTAPON
-AETHEL es el coordinador de enjambres que:
-
-Commitea intenciones en AgentYarbox (commitIntent).
-
-Ejecuta los pagos vía Mandate SDK (sdk.pay).
-
-Obtiene el tiquete de pago (getReceipt).
-
-Guarda los tiquetes en formato JSONL para auditorías.
-
-Repositorio de AETHEL: github.com/chan30038917-hue/aethel-autapon
-
-# # Licencia
-MIT
+cd explorer
+npm install
+node indexer/index.mjs    # indexa eventos
+node server/api.mjs        # inicia la API y el frontend en http://localhost:3001
