@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>AETHEL — Neural DAG</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #050505;
+    color: #0ff;
+    font-family: 'Courier New', Courier, monospace;
+    overflow: hidden;
+    height: 100vh;
+    background-image: 
+      linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  #canvas-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  canvas { display: block; width: 100%; height: 100%; }
+
+  .hud {
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    background: rgba(0, 10, 10, 0.7);
+    border: 1px solid #0ff;
+    padding: 1rem;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+  }
+
+  .hud-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem; text-shadow: 0 0 5px #0ff; }
+  .hud-line { font-size: 1rem; margin-bottom: 0.3rem; }
+  .hud-line span { color: #fff; }
+
+  .legend {
+    position: absolute;
+    bottom: 2rem;
+    left: 2rem;
+    background: rgba(0, 10, 10, 0.7);
+    border: 1px solid #333;
+    padding: 1rem;
+    font-size: 0.85rem;
+    display: flex;
+    gap: 1.5rem;
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 5px currentColor; }
+  .scanline {
+    position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+    background: rgba(0, 255, 255, 0.3); box-shadow: 0 0 10px #0ff;
+    animation: scan 6s linear infinite; z-index: 5;
+  }
+  @keyframes scan {
+    0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; }
+  }
+</style>
+</head>
+<body>
+  <div class="scanline"></div>
+  <div class="hud">
+    <div class="hud-title">AETHEL NEXUS</div>
+    <div class="hud-line">ESTADO: <span id="hud-estado">ESPERANDO</span></div>
+    <div class="hud-line">CAPA: <span id="hud-capa">0 / 0</span></div>
+    <div class="hud-line">PAYLOADS: <span id="hud-pagos">0</span></div>
+    <div class="hud-line">PROCESANDO: <span id="hud-actual" style="color:#0ff">-</span></div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="dot" style="background:#0ff"></div> AETHEL</div>
+    <div class="legend-item"><div class="dot" style="background:#555"></div> Pendiente</div>
+    <div class="legend-item"><div class="dot" style="background:#3b82f6"></div> Pagando</div>
+    <div class="legend-item"><div class="dot" style="background:#10b981"></div> Exitoso</div>
+  </div>
+
+  <div id="canvas-container"><canvas id="dagCanvas"></canvas></div>
+
+<script>
+const canvas = document.getElementById('dagCanvas');
+const ctx = canvas.getContext('2d');
+let width, height;
+function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize); resize();
+
+let capasDibujo = [];
+let centro = { x: 0, y: 0, r: 60 };
+let particulas = [];
+
+async function fetchDatos() {
+  try {
+    const res = await fetch('dashboard-status.json?t=' + Date.now());
+    const data = await res.json();
+    procesarDatos(data);
+  } catch(e) {}
+}
+
+function procesarDatos(data) {
+  document.getElementById('hud-estado').textContent = data.capaActual >= data.capasTotales ? 'COMPLETADO' : 'EJECUTANDO';
+  document.getElementById('hud-estado').style.color = data.capaActual >= data.capasTotales ? '#10b981' : '#0ff';
+  document.getElementById('hud-capa').textContent = `${data.capaActual} / ${data.capasTotales}`;
+  document.getElementById('hud-pagos').textContent = data.resultados.length;
+  document.getElementById('hud-actual').textContent = data.agenteActual || '-';
+
+  centro.x = width / 2; centro.y = height / 2;
+
+  capasDibujo = data.capas.map((capa, index) => {
+    const numCapas = data.capasTotales;
+    const anguloBase = (Math.PI * 2) / numCapas;
+    const angulo = index * anguloBase - Math.PI / 2;
+    const radioOrbita = Math.min(width, height) * 0.35;
+    
+    const capaX = centro.x + Math.cos(angulo) * radioOrbita;
+    const capaY = centro.y + Math.sin(angulo) * radioOrbita;
+
+    return {
+      numero: capa.numero,
+      estado: capa.estado,
+      x: capaX, y: capaY,
+      agentes: capa.pagos.map((agente, i) => {
+        const agAngulo = (Math.PI * 2 / capa.pagos.length) * i;
+        const agRadio = 40;
+        const agX = capaX + Math.cos(agAngulo) * agRadio;
+        const agY = capaY + Math.sin(agAngulo) * agRadio;
+        
+        const resultado = data.resultados.find(r => r.agente === agente);
+        let color = '#555'; // Pendiente
+        
+        if (resultado) {
+          color = resultado.ok ? '#10b981' : '#ef4444'; // Verde o Rojo
+        } else if (capa.estado === 'en_progreso') {
+          // Si es el agente actual, azul brillante. Si no, azul tenue.
+          color = (data.agenteActual === agente) ? '#3b82f6' : '#1e3a8a';
+        }
+
+        return { nombre: agente, x: agX, y: agY, color, activo: data.agenteActual === agente };
+      })
+    };
+  });
+}
+
+let tiempo = 0;
+function animar() {
+  ctx.clearRect(0, 0, width, height);
+  tiempo += 0.05;
+
+  capasDibujo.forEach(capa => {
+    capa.agentes.forEach(ag => {
+      if (capa.estado === 'pendiente') return;
+      
+      ctx.beginPath();
+      ctx.moveTo(ag.x, ag.y);
+      ctx.lineTo(centro.x, centro.y);
+      ctx.strokeStyle = ag.color === '#555' ? 'rgba(255,255,255,0.05)' : ag.color + '44';
+      ctx.lineWidth = ag.activo ? 2 : 1;
+      ctx.stroke();
+
+      if (ag.activo && Math.random() < 0.2) {
+        particulas.push({ startX: ag.x, startY: ag.y, progress: 0, color: ag.color });
+      }
+    });
+  });
+
+  particulas.forEach((p, index) => {
+    p.progress += 0.03;
+    const px = p.startX + (centro.x - p.startX) * p.progress;
+    const py = p.startY + (centro.y - p.startY) * p.progress;
+
+    ctx.beginPath();
+    ctx.arc(px, py, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.shadowBlur = 10; ctx.shadowColor = p.color;
+    ctx.fill(); ctx.shadowBlur = 0;
+
+    if (p.progress >= 1) particulas.splice(index, 1);
+  });
+
+  const pulsoCentro = Math.sin(tiempo * 3) * 5;
+  ctx.beginPath();
+  ctx.arc(centro.x, centro.y, centro.r + pulsoCentro, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0, 255, 255, 0.05)';
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(centro.x, centro.y, centro.r, 0, Math.PI * 2);
+  ctx.fillStyle = '#000';
+  ctx.fill();
+  ctx.strokeStyle = '#0ff';
+  ctx.lineWidth = 3;
+  ctx.shadowBlur = 20; ctx.shadowColor = '#0ff';
+  ctx.stroke(); ctx.shadowBlur = 0;
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 16px "Courier New"';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('AETHEL', centro.x, centro.y);
+
+  capasDibujo.forEach(capa => {
+    ctx.fillStyle = capa.estado === 'pendiente' ? '#444' : '#fff';
+    ctx.font = 'bold 14px "Courier New"';
+    ctx.fillText('CAPA ' + capa.numero, capa.x, capa.y - 60);
+
+    capa.agentes.forEach(ag => {
+      ctx.beginPath();
+      ctx.arc(ag.x, ag.y, 16, 0, Math.PI * 2);
+      ctx.fillStyle = '#000';
+      ctx.fill();
+      ctx.strokeStyle = ag.color;
+      ctx.lineWidth = ag.activo ? 3 : 2;
+      if (ag.color !== '#555') {
+        ctx.shadowBlur = ag.activo ? 20 : 5;
+        ctx.shadowColor = ag.color;
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.fillStyle = ag.color === '#555' ? '#888' : '#fff';
+      ctx.font = 'bold 12px "Courier New"';
+      ctx.fillText(ag.nombre.split('-')[1] || ag.nombre, ag.x, ag.y);
+    });
+  });
+
+  requestAnimationFrame(animar);
+}
+
+fetchDatos();
+setInterval(fetchDatos, 500); // Actualizar más rápido
+animar();
+</script>
+</body>
+</html>
