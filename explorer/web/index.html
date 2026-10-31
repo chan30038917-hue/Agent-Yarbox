@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>AgentYarbox — Explorador</title>
+<style>
+body { font-family: sans-serif; background: #0a0a0a; color: #e0e0e0; padding: 2rem; }
+h1 { color: #fff; }
+.stats { display: flex; gap: 1rem; margin: 2rem 0; }
+.card { background: #111; border: 1px solid #222; padding: 1rem 2rem; border-radius: 8px; }
+.card .num { font-size: 2rem; font-weight: bold; }
+.card .label { color: #888; font-size: 0.8rem; }
+table { width: 100%; border-collapse: collapse; background: #111; }
+th, td { padding: 0.5rem 1rem; text-align: left; border-bottom: 1px solid #222; font-size: 0.85rem; }
+th { background: #1a1a1a; color: #888; }
+a { color: #3b82f6; }
+button { background: #3b82f6; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+button:hover { background: #2563eb; }
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; }
+.modal.active { display: flex; align-items: center; justify-content: center; }
+.modal-content { background: #111; border: 1px solid #222; border-radius: 8px; padding: 2rem; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto; }
+.modal-content h2 { margin-bottom: 1rem; color: #fff; }
+.modal-content .row { display: flex; padding: 0.5rem 0; border-bottom: 1px solid #222; }
+.modal-content .row .label { color: #888; width: 180px; flex-shrink: 0; }
+.modal-content .row .value { font-family: monospace; word-break: break-all; }
+.modal-content .close { float: right; background: #ef4444; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>AgentYarbox — Explorador de Accountability</h1>
+<div class="stats">
+  <div class="card"><div class="num" id="total">—</div><div class="label">Total eventos</div></div>
+  <div class="card"><div class="num" id="committed" style="color:#f59e0b">—</div><div class="label">Commiteadas</div></div>
+  <div class="card"><div class="num" id="settled" style="color:#10b981">—</div><div class="label">Liquidadas</div></div>
+  <div class="card"><div class="num" id="inconsistent" style="color:#ef4444">—</div><div class="label">Inconsistentes</div></div>
+</div>
+<table>
+<thead><tr><th>Intent ID</th><th>Evento</th><th>Agente</th><th>Monto</th><th>Bloque</th><th>Tx</th><th>Tiquete</th></tr></thead>
+<tbody id="events"><tr><td colspan="7">Cargando...</td></tr></tbody>
+</table>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="close" onclick="cerrarModal()">Cerrar</button>
+    <h2>Tiquete de Auditoría</h2>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:3001/api';
+
+async function load() {
+  try {
+    const s = await (await fetch(API + '/stats')).json();
+    document.getElementById('total').textContent = s.total;
+    const c = s.stats.find(x => x.eventName === 'IntentCommitted')?.count || 0;
+    const st = s.stats.find(x => x.eventName === 'IntentSettled')?.count || 0;
+    const inc = s.stats.find(x => x.eventName === 'IntentInconsistent')?.count || 0;
+    document.getElementById('committed').textContent = c;
+    document.getElementById('settled').textContent = st;
+    document.getElementById('inconsistent').textContent = inc;
+    const e = await (await fetch(API + '/events?limit=50')).json();
+    document.getElementById('events').innerHTML = e.events.map(ev => {
+      const monto = ev.maxAmount ? (Number(ev.maxAmount)/1e18).toFixed(4)+' MON' : '—';
+      const badge = ev.eventName === 'IntentCommitted' ? '🟡 Commiteada' : ev.eventName === 'IntentSettled' ? '🟢 Liquidada' : '🔴 Inconsistente';
+      return `<tr>
+        <td>#${ev.intentId}</td>
+        <td>${badge}</td>
+        <td>${ev.agent || '—'}</td>
+        <td>${monto}</td>
+        <td>${ev.blockNumber}</td>
+        <td><a href="https://monadscan.com/tx/${ev.transactionHash}" target="_blank">${ev.transactionHash.slice(0,10)}...</a></td>
+        <td><button onclick="verTiquete('${ev.intentId}')">Ver tiquete</button></td>
+      </tr>`;
+    }).join('');
+  } catch(err) {
+    document.getElementById('events').innerHTML = '<tr><td colspan="7">Error: ' + err.message + '</td></tr>';
+  }
+}
+
+async function verTiquete(intentId) {
+  const modal = document.getElementById('modal');
+  const body = document.getElementById('modal-body');
+  body.innerHTML = '<p>Cargando tiquete...</p>';
+  modal.classList.add('active');
+  try {
+    const r = await (await fetch(API + '/receipt/' + intentId)).json();
+    if (r.error) {
+      body.innerHTML = '<p style="color:#ef4444">Error: ' + r.error + '</p>';
+      return;
+    }
+    body.innerHTML = `
+      <div class="row"><div class="label">Intent ID</div><div class="value">#${r.intentId}</div></div>
+      <div class="row"><div class="label">Agente</div><div class="value">${r.agent}</div></div>
+      <div class="row"><div class="label">ERC-8004 Agent ID</div><div class="value">${r.erc8004AgentId}</div></div>
+      <div class="row"><div class="label">Intent Hash</div><div class="value">${r.intentHash}</div></div>
+      <div class="row"><div class="label">Condition Hash</div><div class="value">${r.conditionHash}</div></div>
+      <div class="row"><div class="label">Mandate ID</div><div class="value">${r.mandateId}</div></div>
+      <div class="row"><div class="label">Monto máximo</div><div class="value">${(Number(r.maxAmount)/1e18).toFixed(4)} MON</div></div>
+      <div class="row"><div class="label">Payment Nonce</div><div class="value">${r.paymentNonce}</div></div>
+      <div class="row"><div class="label">Result Hash</div><div class="value">${r.resultHash}</div></div>
+      <div class="row"><div class="label">Timestamp</div><div class="value">${r.timestamp}</div></div>
+      <div class="row"><div class="label">Liquidado</div><div class="value">${r.settled ? '🟢 Sí' : '🟡 No'}</div></div>
+      <div class="row"><div class="label">Inconsistente</div><div class="value">${r.inconsistent ? '🔴 Sí' : '🟢 No'}</div></div>
+    `;
+  } catch(e) {
+    body.innerHTML = '<p style="color:#ef4444">Error: ' + e.message + '</p>';
+  }
+}
+
+function cerrarModal() {
+  document.getElementById('modal').classList.remove('active');
+}
+
+load();
+setInterval(load, 10000);
+</script>
+</body>
+</html>
