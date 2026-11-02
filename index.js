@@ -39,13 +39,13 @@ export class AgentYarbox {
     });
   }
 
-  async settleIntent({ intentId, paymentNonce }) {
+  async settleIntent({ intentId, paymentNonce, resultHash }) {
     if (!this.walletClient) throw new Error('Se necesita privateKey para escribir');
     return await this.walletClient.writeContract({
       address: this.address,
       abi: ABI.abi,
       functionName: 'settleIntent',
-      args: [intentId, paymentNonce],
+      args: [intentId, paymentNonce, resultHash],
     });
   }
 
