@@ -24,8 +24,40 @@ app.use(cors({ origin: 'http://localhost:3001', credentials: true }));
 app.use(express.json());
 app.use(express.static(join(__dirname, '..', 'web')));
 
-const client = createPublicClient({ transport: http('https://rpc.monad.xyz') });
+const client = createPublicClient({ transport: http('https://rpc3.monad.xyz') });
 const CONTRACT = '0x4D0D993e6FF19279dF0E69d9cd9cC946480973dC';
+
+
+const NFT_ADDRESS = '0xDE2153656df0dd9b370bc9796A5dd04Ad24BF4f8';
+const NFT_ABI = [
+  {
+    "inputs": [{"internalType": "address", "name": "owner", "type": "address"}],
+    "name": "balanceOf",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "address", "name": "owner", "type": "address"}, {"internalType": "uint256", "name": "index", "type": "uint256"}],
+    "name": "tokenOfOwnerByIndex",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "name": "receipts",
+    "outputs": [
+      {"internalType": "uint256", "name": "intentId", "type": "uint256"},
+      {"internalType": "address", "name": "agent", "type": "address"},
+      {"internalType": "uint256", "name": "maxAmount", "type": "uint256"},
+      {"internalType": "bytes32", "name": "paymentNonce", "type": "bytes32"},
+      {"internalType": "uint256", "name": "timestamp", "type": "uint256"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+];
 
 const ABI_GET_RECEIPT = [{
   name: 'getReceipt', type: 'function', stateMutability: 'view',
@@ -165,6 +197,50 @@ app.get('/api/receipt/:intentId', async (req, res) => {
       timestamp: receipt[8].toString(), settled: receipt[9], inconsistent: receipt[10],
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+
+app.get('/api/nfts/:address', async (req, res) => {
+  try {
+    const address = req.params.address.toLowerCase();
+    const nfts = [];
+    
+    // Obtener el total de NFTs acuñados
+    const totalSupply = await client.readContract({
+      address: NFT_ADDRESS,
+      abi: [{ "inputs": [], "name": "nextTokenId", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function" }],
+      functionName: 'nextTokenId',
+    });
+    
+    const total = Number(totalSupply);
+    // Revisar los últimos 100 NFTs (o todos si hay menos)
+    const start = total > 100 ? total - 100 : 0;
+    
+    for (let i = start; i < total; i++) {
+      try {
+        const data = await client.readContract({
+          address: NFT_ADDRESS,
+          abi: NFT_ABI,
+          functionName: 'receipts',
+          args: [i],
+        });
+        if (data[1].toLowerCase() === address) {
+          nfts.push({
+            tokenId: i.toString(),
+            intentId: data[0].toString(),
+            agent: data[1],
+            maxAmount: data[2].toString(),
+            paymentNonce: data[3],
+            timestamp: data[4].toString(),
+          });
+        }
+      } catch (e) { /* saltar si el NFT no existe */ }
+    }
+    
+    res.json({ address, total: nfts.length, nfts });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.listen(PORT, () => {

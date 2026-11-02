@@ -29,6 +29,10 @@ button.ver { background: #3b82f6; color: white; border: none; padding: 0.3rem 0.
 .modal-content .row .value { font-family: monospace; word-break: break-all; }
 .modal-content .close { float: right; background: #ef4444; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer; }
 #auth-status { font-size: 0.85rem; color: #888; }
+.nft-card { background: #111; border: 1px solid #222; border-radius: 8px; padding: 1rem; width: 180px; text-align: center; }
+.nft-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.nft-token { font-weight: bold; color: #10b981; }
+.nft-detail { font-size: 0.8rem; color: #888; }
 </style>
 </head>
 <body>
@@ -41,6 +45,12 @@ button.ver { background: #3b82f6; color: white; border: none; padding: 0.3rem 0.
   </div>
 </div>
 
+<div style="margin-bottom: 1rem; display: flex; gap: 0.5rem;">
+  <input id="search-address" placeholder="Buscar por dirección (0x...)" style="padding: 0.6rem; border-radius: 6px; border: 1px solid #333; background: #111; color: #e0e0e0; width: 350px; font-family: monospace;" />
+  <button class="btn" id="btn-search">Buscar</button>
+  <button class="btn btn-danger" id="btn-clear" style="display:none">Limpiar</button>
+</div>
+
 <div class="stats">
   <div class="card"><div class="num" id="total">—</div><div class="label">Total eventos</div></div>
   <div class="card"><div class="num" id="committed" style="color:#f59e0b">—</div><div class="label">Commiteadas</div></div>
@@ -48,10 +58,9 @@ button.ver { background: #3b82f6; color: white; border: none; padding: 0.3rem 0.
   <div class="card"><div class="num" id="inconsistent" style="color:#ef4444">—</div><div class="label">Inconsistentes</div></div>
 </div>
 
-<div style="margin-bottom: 1rem; display: flex; gap: 0.5rem;">
-  <input id="search-address" placeholder="Buscar por dirección (0x...)" style="padding: 0.6rem; border-radius: 6px; border: 1px solid #333; background: #111; color: #e0e0e0; width: 350px; font-family: monospace;" />
-  <button class="btn" id="btn-search">Buscar</button>
-  <button class="btn btn-danger" id="btn-clear" style="display:none">Limpiar</button>
+<div id="nfts-section" style="display:none; margin-bottom: 2rem;">
+  <h3 style="margin-bottom: 1rem; color: #fff;">🏆 NFTs de Reputación</h3>
+  <div id="nfts-grid" style="display: flex; gap: 1rem; flex-wrap: wrap;"></div>
 </div>
 
 <table>
@@ -95,54 +104,31 @@ async function checkAuth() {
 }
 
 async function conectarWallet() {
-  if (!window.ethereum) {
-    alert('Necesitas MetaMask u otra wallet para conectar.');
-    return;
-  }
+  if (!window.ethereum) { alert('Necesitas MetaMask.'); return; }
   try {
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     const address = window.getAddress(accounts[0]);
-
     const nonceRes = await fetch(API + '/auth/nonce', { credentials: 'include' });
     const { nonce } = await nonceRes.json();
-
     const message = window.createSiweMessage({
-      domain: window.location.host,
-      address: address,
-      statement: 'Quieres iniciar sesion en AgentYarbox',
-      uri: window.location.origin,
-      version: '1',
-      chainId: 143,
-      nonce: nonce,
+      domain: window.location.host, address, statement: 'Quieres iniciar sesion en AgentYarbox',
+      uri: window.location.origin, version: '1', chainId: 143, nonce
     });
-
-    const signature = await window.ethereum.request({
-      method: 'personal_sign',
-      params: [message, address],
-    });
-
+    const signature = await window.ethereum.request({ method: 'personal_sign', params: [message, address] });
     const verifyRes = await fetch(API + '/auth/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ message, signature }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+      body: JSON.stringify({ message, signature })
     });
     const verifyData = await verifyRes.json();
-    if (verifyData.ok) {
-      await checkAuth();
-      await load();
-    } else {
-      alert('Error al verificar: ' + verifyData.error);
-    }
-  } catch (e) {
-    alert('Error: ' + e.message);
-  }
+    if (verifyData.ok) { await checkAuth(); await load(); cargarNFTs(address); }
+    else alert('Error: ' + verifyData.error);
+  } catch (e) { alert('Error: ' + e.message); }
 }
 
 async function logout() {
   await fetch(API + '/auth/logout', { method: 'POST', credentials: 'include' });
-  await checkAuth();
-  await load();
+  await checkAuth(); await load();
+  document.getElementById('nfts-section').style.display = 'none';
 }
 
 async function load() {
@@ -150,7 +136,6 @@ async function load() {
     const manualAddress = document.getElementById('search-address').value.trim();
     const queryParams = manualAddress ? '?address=' + manualAddress : '';
     const queryParamsAmp = manualAddress ? '&address=' + manualAddress : '';
-
     const s = await (await fetch(API + '/stats' + queryParams, { credentials: 'include' })).json();
     document.getElementById('total').textContent = s.total;
     const c = s.stats.find(x => x.eventName === 'IntentCommitted')?.count || 0;
@@ -165,11 +150,8 @@ async function load() {
       const monto = ev.maxAmount ? (Number(ev.maxAmount)/1e18).toFixed(4)+' MON' : '—';
       const badge = ev.eventName === 'IntentCommitted' ? '🟡 Commiteada' : ev.eventName === 'IntentSettled' ? '🟢 Liquidada' : '🔴 Inconsistente';
       return `<tr>
-        <td>#${ev.intentId}</td>
-        <td>${badge}</td>
-        <td>${ev.agent || '—'}</td>
-        <td>${monto}</td>
-        <td>${ev.blockNumber}</td>
+        <td>#${ev.intentId}</td><td>${badge}</td><td>${ev.agent || '—'}</td>
+        <td>${monto}</td><td>${ev.blockNumber}</td>
         <td><a href="https://monadscan.com/tx/${ev.transactionHash}" target="_blank">${ev.transactionHash.slice(0,10)}...</a></td>
         <td><button class="ver" onclick="verTiquete('${ev.intentId}')">Ver tiquete</button></td>
       </tr>`;
@@ -177,6 +159,27 @@ async function load() {
   } catch(err) {
     document.getElementById('events').innerHTML = '<tr><td colspan="7">Error: ' + err.message + '</td></tr>';
   }
+}
+
+async function cargarNFTs(address) {
+  const section = document.getElementById('nfts-section');
+  const grid = document.getElementById('nfts-grid');
+  if (!address) { section.style.display = 'none'; return; }
+  try {
+    const r = await fetch(API + '/nfts/' + address, { credentials: 'include' });
+    const data = await r.json();
+    if (data.total === 0) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    grid.innerHTML = data.nfts.map(nft => `
+      <div class="nft-card">
+        <img src="https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=200&h=120&fit=crop" alt="AI Agent" style="width: 100%; height: 120px; object-fit: cover; border-radius: 6px; margin-bottom: 0.5rem;" />
+        <div class="nft-token">Token #${nft.tokenId}</div>
+        <div class="nft-detail">Intent #${nft.intentId}</div>
+        <div class="nft-detail">${(Number(nft.maxAmount)/1e18).toFixed(4)} MON</div>
+        <a href="https://monadscan.com/nft/0xDE2153656df0dd9b370bc9796A5dd04Ad24BF4f8/${nft.tokenId}" target="_blank" style="display:block; margin-top:0.5rem; font-size:0.8rem;">Ver en MonadScan</a>
+      </div>
+    `).join('');
+  } catch (e) { console.log('Error NFTs:', e); }
 }
 
 async function verTiquete(intentId) {
@@ -206,23 +209,18 @@ function cerrarModal() { document.getElementById('modal').classList.remove('acti
 document.getElementById('btn-connect').addEventListener('click', conectarWallet);
 document.getElementById('btn-logout').addEventListener('click', logout);
 
-
 document.getElementById('btn-search').addEventListener('click', () => {
+  const addr = document.getElementById('search-address').value.trim();
   document.getElementById('btn-clear').style.display = 'inline-block';
   load();
+  cargarNFTs(addr);
 });
 
 document.getElementById('btn-clear').addEventListener('click', () => {
   document.getElementById('search-address').value = '';
   document.getElementById('btn-clear').style.display = 'none';
+  document.getElementById('nfts-section').style.display = 'none';
   load();
-});
-
-document.getElementById('search-address').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    document.getElementById('btn-clear').style.display = 'inline-block';
-    load();
-  }
 });
 
 checkAuth();

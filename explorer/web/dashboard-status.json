@@ -1,7 +1,7 @@
 {
-  "timestamp": 1793419265727,
+  "timestamp": 1793581808764,
   "capasTotales": 3,
-  "capaActual": 3,
+  "capaActual": 1,
   "agenteActual": null,
   "capas": [
     {
@@ -11,13 +11,7 @@
         "agente-02",
         "agente-03",
         "agente-04",
-        "agente-05"
-      ],
-      "estado": "completada"
-    },
-    {
-      "numero": 2,
-      "pagos": [
+        "agente-05",
         "agente-06",
         "agente-07",
         "agente-08",
@@ -27,13 +21,36 @@
       "estado": "completada"
     },
     {
+      "numero": 2,
+      "pagos": [
+        "agente-01",
+        "agente-02",
+        "agente-03",
+        "agente-04",
+        "agente-05",
+        "agente-06",
+        "agente-07",
+        "agente-08",
+        "agente-09",
+        "agente-10"
+      ],
+      "estado": "en_progreso"
+    },
+    {
       "numero": 3,
       "pagos": [
         "agente-01",
         "agente-02",
-        "agente-03"
+        "agente-03",
+        "agente-04",
+        "agente-05",
+        "agente-06",
+        "agente-07",
+        "agente-08",
+        "agente-09",
+        "agente-10"
       ],
-      "estado": "completada"
+      "estado": "pendiente"
     }
   ],
   "resultados": [
@@ -76,18 +93,6 @@
     {
       "ok": true,
       "agente": "agente-10"
-    },
-    {
-      "ok": true,
-      "agente": "agente-01"
-    },
-    {
-      "ok": true,
-      "agente": "agente-02"
-    },
-    {
-      "ok": true,
-      "agente": "agente-03"
     }
   ]
 }
