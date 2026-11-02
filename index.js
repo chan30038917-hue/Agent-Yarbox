@@ -29,13 +29,13 @@ export class AgentYarbox {
     }
   }
 
-  async commitIntent({ intentHash, mandateId, maxAmount, erc8004AgentId }) {
+  async commitIntent({ intentHash, conditionHash, mandateId, maxAmount, erc8004AgentId }) {
     if (!this.walletClient) throw new Error('Se necesita privateKey para escribir');
     return await this.walletClient.writeContract({
       address: this.address,
       abi: ABI.abi,
       functionName: 'commitIntent',
-      args: [intentHash, mandateId, maxAmount, erc8004AgentId],
+      args: [intentHash, conditionHash, mandateId, maxAmount, erc8004AgentId],
     });
   }
 
