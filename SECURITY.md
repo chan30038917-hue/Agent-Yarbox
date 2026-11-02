@@ -39,3 +39,12 @@ Los contratos son seguros y no presentan riesgos de robo de fondos, doble gasto 
 
 ## Fecha
 1 de Noviembre de 2026
+
+
+## Dirección de la Multisig (Safe)
+
+La propiedad de `PaymentGate` ha sido transferida a la siguiente bóveda multifirma:
+
+- **Dirección**: `0x11EF6A9204e48C06ef244C125850350a6CaAC604`
+- **Red**: Monad Mainnet (Chain ID 143)
+- **Configuración**: 2 de 3 firmas
