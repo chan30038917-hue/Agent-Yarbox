@@ -94,3 +94,25 @@ cd explorer
 npm install
 node indexer/index.mjs    # indexa eventos
 node server/api.mjs        # inicia la API y el frontend en http://localhost:3001
+
+
+---
+
+## Score de Reputación y Tiers
+
+El explorador web calcula automáticamente un **Score de Reputación** (0-100) para cada agente basándose en:
+
+- **NFTs acumulados:** 10 puntos por cada pago exitoso.
+- **Volumen total:** 1 punto por cada 0.01 MON pagado.
+- **Penalización:** -20 puntos por cada intención inconsistente.
+
+### Tiers
+
+| Tier | Requisito |
+|---|---|
+| 🥉 Bronce | 1 a 10 NFTs |
+| 🥈 Plata | 11 a 50 NFTs |
+| 🥇 Oro | 51 a 200 NFTs |
+| 💎 Diamante | +200 NFTs y 0 fallos |
+
+El Score y el Tier se muestran en el explorador al buscar la dirección de un agente, junto con sus NFTs de reputación.
