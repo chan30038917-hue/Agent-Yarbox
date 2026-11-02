@@ -2,5 +2,8 @@
 src = "contracts"
 out = "out"
 libs = ["lib"]
-solc_version = "0.8.24"
-auto_detect_solc = false
+metadata_hash = "none"
+use_literal_content = true
+
+[rpc_endpoints]
+monad = "https://rpc.monad.xyz"
