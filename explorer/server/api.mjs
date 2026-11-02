@@ -205,7 +205,6 @@ app.get('/api/nfts/:address', async (req, res) => {
     const address = req.params.address.toLowerCase();
     const nfts = [];
     
-    // Obtener el total de NFTs acuñados
     const totalSupply = await client.readContract({
       address: NFT_ADDRESS,
       abi: [{ "inputs": [], "name": "nextTokenId", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function" }],
@@ -213,7 +212,6 @@ app.get('/api/nfts/:address', async (req, res) => {
     });
     
     const total = Number(totalSupply);
-    // Revisar los últimos 100 NFTs (o todos si hay menos)
     const start = total > 100 ? total - 100 : 0;
     
     for (let i = start; i < total; i++) {
@@ -234,10 +232,40 @@ app.get('/api/nfts/:address', async (req, res) => {
             timestamp: data[4].toString(),
           });
         }
-      } catch (e) { /* saltar si el NFT no existe */ }
+      } catch (e) { /* saltar */ }
     }
+
+    // Calcular Score y Tier
+    const totalNFTs = nfts.length;
+    const totalVolume = nfts.reduce((acc, nft) => acc + Number(nft.maxAmount), 0) / 1e18;
     
-    res.json({ address, total: nfts.length, nfts });
+    // Contar inconsistentes (intentos fallidos)
+    const inconsistentCount = db.prepare('SELECT COUNT(*) as count FROM events WHERE agent = ? AND inconsistent = 1').get(address)?.count || 0;
+    
+    // Fórmula del score
+    let score = (totalNFTs * 10) + (totalVolume * 100) - (inconsistentCount * 20);
+    if (score > 100) score = 100;
+    if (score < 0) score = 0;
+    score = Math.round(score);
+
+    // Determinar Tier
+    let tier = 'Sin nivel';
+    let tierIcon = '⚪';
+    if (totalNFTs >= 200) { tier = 'Diamante'; tierIcon = '💎'; }
+    else if (totalNFTs >= 51) { tier = 'Oro'; tierIcon = '🥇'; }
+    else if (totalNFTs >= 11) { tier = 'Plata'; tierIcon = '🥈'; }
+    else if (totalNFTs >= 1) { tier = 'Bronce'; tierIcon = '🥉'; }
+
+    res.json({ 
+      address, 
+      total: totalNFTs, 
+      totalVolume: totalVolume.toFixed(4),
+      inconsistent: inconsistentCount,
+      score,
+      tier,
+      tierIcon,
+      nfts 
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

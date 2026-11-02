@@ -58,10 +58,24 @@ button.ver { background: #3b82f6; color: white; border: none; padding: 0.3rem 0.
   <div class="card"><div class="num" id="inconsistent" style="color:#ef4444">—</div><div class="label">Inconsistentes</div></div>
 </div>
 
+
 <div id="nfts-section" style="display:none; margin-bottom: 2rem;">
   <h3 style="margin-bottom: 1rem; color: #fff;">🏆 NFTs de Reputación</h3>
+  <div id="score-panel" style="background: #111; border: 1px solid #333; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; display: flex; gap: 2rem; align-items: center;">
+    <div style="font-size: 2.5rem;" id="tier-icon">⚪</div>
+    <div>
+      <div style="font-size: 1.2rem; color: #fff; font-weight: bold;" id="tier-name">Sin nivel</div>
+      <div style="color: #888; font-size: 0.9rem;">Score: <span id="score-value" style="color: #10b981; font-weight: bold;">0</span> / 100</div>
+    </div>
+    <div style="border-left: 1px solid #333; padding-left: 2rem;">
+      <div style="color: #888; font-size: 0.8rem;">Pagos exitosos: <span id="stat-nfts" style="color: #fff;">0</span></div>
+      <div style="color: #888; font-size: 0.8rem;">Volumen total: <span id="stat-volume" style="color: #fff;">0 MON</span></div>
+      <div style="color: #888; font-size: 0.8rem;">Fallos: <span id="stat-fails" style="color: #ef4444;">0</span></div>
+    </div>
+  </div>
   <div id="nfts-grid" style="display: flex; gap: 1rem; flex-wrap: wrap;"></div>
 </div>
+
 
 <table>
 <thead><tr><th>Intent ID</th><th>Evento</th><th>Agente</th><th>Monto</th><th>Bloque</th><th>Tx</th><th>Tiquete</th></tr></thead>
@@ -168,8 +182,27 @@ async function cargarNFTs(address) {
   try {
     const r = await fetch(API + '/nfts/' + address, { credentials: 'include' });
     const data = await r.json();
-    if (data.total === 0) { section.style.display = 'none'; return; }
+    
+    if (data.total === 0) { 
+      section.style.display = 'block'; 
+      document.getElementById('tier-icon').textContent = '⚪';
+      document.getElementById('tier-name').textContent = 'Sin nivel';
+      document.getElementById('score-value').textContent = '0';
+      document.getElementById('stat-nfts').textContent = '0';
+      document.getElementById('stat-volume').textContent = '0 MON';
+      document.getElementById('stat-fails').textContent = '0';
+      grid.innerHTML = '<p style="color:#888;">Este agente aún no tiene NFTs de reputación.</p>';
+      return; 
+    }
+    
     section.style.display = 'block';
+    document.getElementById('tier-icon').textContent = data.tierIcon;
+    document.getElementById('tier-name').textContent = data.tier;
+    document.getElementById('score-value').textContent = data.score;
+    document.getElementById('stat-nfts').textContent = data.total;
+    document.getElementById('stat-volume').textContent = data.totalVolume + ' MON';
+    document.getElementById('stat-fails').textContent = data.inconsistent;
+    
     grid.innerHTML = data.nfts.map(nft => `
       <div class="nft-card">
         <img src="https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=200&h=120&fit=crop" alt="AI Agent" style="width: 100%; height: 120px; object-fit: cover; border-radius: 6px; margin-bottom: 0.5rem;" />
