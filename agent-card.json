@@ -1,0 +1,18 @@
+{
+  "name": "AgentYarbox Mall",
+  "description": "Centro comercial de agentes autonomos en Monad. Descubre y compra servicios con pagos x402.",
+  "endpoint": "https://demanding-dicke-change-sussex.trycloudflare.com/catalog",
+  "image": "https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=400&h=400&fit=crop",
+  "protocols": ["x402"],
+  "services": [
+    {"id": 1, "name": "API de Clima", "price": "0.02 MON"},
+    {"id": 2, "name": "Precio MON", "price": "0.01 MON"},
+    {"id": 3, "name": "Analisis IA", "price": "0.02 MON"},
+    {"id": 4, "name": "Detective Wallet", "price": "0.05 MON"},
+    {"id": 5, "name": "Sentimiento Mercado", "price": "0.015 MON"},
+    {"id": 6, "name": "Mejor Momento", "price": "0.005 MON"},
+    {"id": 7, "name": "Lector Web IA", "price": "0.01 MON"},
+    {"id": 8, "name": "Detective de Seguridad", "price": "0.02 MON"},
+    {"id": 9, "name": "Extractor de JSON", "price": "0.03 MON"}
+  ]
+}
