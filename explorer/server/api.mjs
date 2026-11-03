@@ -8,7 +8,11 @@ import { SiweMessage } from 'siwe';
 import { getIronSession } from 'iron-session';
 import crypto from 'crypto';
 import { readFileSync } from 'fs';
+
+// --- IMPORTAR LOS SERVICIOS ---
 import serviciosRoutes from './servicios.mjs';
+import servicios2Routes from './servicios2.mjs';
+import servicios3Routes from './servicios3.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -26,8 +30,10 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.static(join(__dirname, '..', 'web')));
 
-// Aquí conectamos los servicios (x402)
+// --- CONECTAR LOS SERVICIOS ---
 app.use('/api', serviciosRoutes);
+app.use('/api', servicios2Routes);
+app.use('/api', servicios3Routes);
 
 const client = createPublicClient({ transport: http('https://rpc3.monad.xyz') });
 const CONTRACT = '0x4D0D993e6FF19279dF0E69d9cd9cC946480973dC';
@@ -161,7 +167,6 @@ app.post('/api/buy', async (req, res) => {
     const puedeComprar = await client.readContract({ address: SERVICE_DIRECTORY_ADDRESS, abi: SERVICE_DIRECTORY_ABI, functionName: 'canPurchase', args: [agente.address, BigInt(serviceId)] });
     if (!puedeComprar) return res.status(403).json({ error: 'Reputación insuficiente' });
     
-    // Importar dinámicamente para evitar problemas
     const { MandateSDK } = await import('@chan30/mandate-sdk');
     const { AgentYarbox } = await import('../../index.js');
     const { Wallet, parseEther, keccak256, toUtf8Bytes, Contract } = await import('ethers');

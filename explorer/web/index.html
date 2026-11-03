@@ -442,7 +442,7 @@
 </script>
 
 <script>
-const API = 'http://localhost:3001/api';
+const API = "https://demanding-dicke-change-sussex.trycloudflare.com/api";
 
 // PARTÍCULAS DE FONDO
 const canvas = document.getElementById('particles-canvas');
@@ -645,7 +645,12 @@ async function cargarMall() {
       grid.innerHTML = '<p style="color:#6b8fa8;">Aún no hay servicios registrados.</p>';
       return;
     }
-    grid.innerHTML = data.services.map(s => `
+    const serviciosActivos = data.services.filter(s => s.active);
+    if (serviciosActivos.length === 0) {
+      grid.innerHTML = '<p style="color:#6b8fa8;">No hay servicios activos en este momento.</p>';
+      return;
+    }
+    grid.innerHTML = serviciosActivos.map(s => `
       <div class="mall-card">
         <div class="name">${s.name}</div>
         <div style="color:#6b8fa8; font-size:0.85rem; margin-bottom:0.5rem;">${s.description}</div>
