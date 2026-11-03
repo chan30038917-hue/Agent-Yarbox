@@ -1,6 +1,6 @@
 {
   "name": "@chan30/agent-yarbox",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Caja de accountability para agentes autónomos en Monad. Cada intención se compromete antes de ejecutar. Cada pago se verifica contra el mandato. Cada resultado queda registrado on-chain.",
   "type": "module",
   "main": "index.js",
