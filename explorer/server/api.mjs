@@ -412,6 +412,130 @@ app.post('/api/buy', async (req, res) => {
   }
 });
 
+
+app.post('/register-service', async (req, res) => {
+  try {
+    const { name, description, price, endpoint, agentId } = req.body;
+    if (!name || !description || !price || !endpoint || !agentId) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    }
+
+    // Leer mandatos y buscar el agente (vendedor)
+    const mandatos = JSON.parse(readFileSync('/home/usuariochan/aethel-autapon/integration/mandatos-agentes.json', 'utf8'));
+    const agente = mandatos.find(m => m.agentId === agentId);
+    if (!agente) return res.status(404).json({ error: 'Agente no encontrado' });
+
+    // Crear el contrato con la clave del agente
+    const provider = new (await import('ethers')).JsonRpcProvider('https://rpc3.monad.xyz', 143);
+    const { Wallet, Contract, parseEther } = await import('ethers');
+    const wallet = new Wallet(agente.privateKey, provider);
+
+    const SERVICE_DIRECTORY_ABI_WRITE = [
+      { "inputs": [{"internalType": "string", "name": "_name", "type": "string"}, {"internalType": "string", "name": "_description", "type": "string"}, {"internalType": "uint256", "name": "_price", "type": "uint256"}, {"internalType": "string", "name": "_endpoint", "type": "string"}, {"internalType": "uint256", "name": "_reputationRequired", "type": "uint256"}], "name": "registerService", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "nonpayable", "type": "function" }
+    ];
+
+    const contract = new Contract('0xCD9DdC0A0abB73a65F0AbF02Ec940F30661ca2AB', SERVICE_DIRECTORY_ABI_WRITE, wallet);
+    
+    const tx = await contract.registerService(name, description, parseEther(price), endpoint, 0);
+    await tx.wait();
+
+    res.json({ ok: true, tx: tx.hash });
+  } catch (e) {
+    res.status(500).json({ error: e.message.slice(0, 200) });
+  }
+});
+
+
+app.get('/catalog', async (req, res) => {
+  try {
+    const count = await client.readContract({
+      address: SERVICE_DIRECTORY_ADDRESS,
+      abi: SERVICE_DIRECTORY_ABI,
+      functionName: 'getServicesCount',
+    });
+    
+    const services = [];
+    for (let i = 0; i < Number(count); i++) {
+      const s = await client.readContract({
+        address: SERVICE_DIRECTORY_ADDRESS,
+        abi: SERVICE_DIRECTORY_ABI,
+        functionName: 'getService',
+        args: [i],
+      });
+      if (s.active) {
+        services.push({
+          id: i.toString(),
+          provider: s.provider,
+          name: s.name,
+          description: s.description,
+          price: (Number(s.price) / 1e18).toFixed(4) + ' MON',
+          endpoint: s.endpoint,
+          reputation_required: s.reputationRequired.toString(),
+          network: "monad-mainnet",
+          chain_id: 143,
+          contract: SERVICE_DIRECTORY_ADDRESS
+        });
+      }
+    }
+    
+    res.json({
+      name: "AgentYarbox Mall",
+      description: "Centro comercial de agentes autónomos en Monad",
+      services: services
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
+app.get('/api/premium', async (req, res) => {
+  // Verificar si el cliente envió un pago (en un caso real, verificarías la firma)
+  const paymentSignature = req.headers['payment-signature'];
+  
+  if (!paymentSignature) {
+    // Si no hay pago, devolver 402 con los requisitos
+    const paymentRequired = {
+      x402Version: 2,
+      accepts: [{
+        scheme: "exact",
+        network: "eip155:143", // Monad Mainnet
+        amount: "20000", // 0.02 USDC (6 decimales)
+        asset: "0x754704Bc059F8C67012fEd69BC8A327a5aafb603", // USDC en Monad
+        payTo: "0xF6805F61820A860db4B7462Bc9940793fC8ed22A", // Tu wallet
+        maxTimeoutSeconds: 300,
+        extra: {
+          name: "USDC",
+          version: "2"
+        }
+      }]
+    };
+    
+    // Codificar en Base64 (formato x402 V2)
+    const encoded = Buffer.from(JSON.stringify(paymentRequired)).toString('base64');
+    
+    res.status(402)
+       .set('PAYMENT-REQUIRED', encoded)
+       .json({ 
+         error: 'Payment Required',
+         message: 'Este servicio requiere pago. Envía el header PAYMENT-SIGNATURE.',
+         paymentRequired: paymentRequired
+       });
+    return;
+  }
+  
+  // Si hay pago, devolver el contenido (aquí simulado)
+  res.json({
+    success: true,
+    data: {
+      weather: "Soleado",
+      temperature: 25,
+      location: "Monad City"
+    },
+    message: "Servicio premium accedido correctamente"
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`API corriendo en http://localhost:${PORT}`);
 });
