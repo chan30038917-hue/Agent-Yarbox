@@ -48,3 +48,12 @@ La propiedad de `PaymentGate` ha sido transferida a la siguiente bóveda multifi
 - **Dirección**: `0x11EF6A9204e48C06ef244C125850350a6CaAC604`
 - **Red**: Monad Mainnet (Chain ID 143)
 - **Configuración**: 2 de 3 firmas
+
+
+## Gobernanza del ServiceDirectory
+
+La propiedad del contrato `ServiceDirectory` (0xCD9DdC0A0abB73a65F0AbF02Ec940F30661ca2AB) ha sido transferida a la Multisig (0x11EF6A9204e48C06ef244C125850350a6CaAC604).
+
+- **Función administrativa:** `pause()` y `unpause()`.
+- **Requisito:** 2 de 3 firmas.
+- **Propósito:** Evitar que una sola persona (o una clave comprometida) pueda pausar el contrato de forma unilateral.
