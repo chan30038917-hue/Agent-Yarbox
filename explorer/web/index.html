@@ -2,90 +2,402 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>AgentYarbox — Explorador</title>
+<title>AgentYarbox — Nexus</title>
 <style>
-body { font-family: sans-serif; background: #0a0a0a; color: #e0e0e0; padding: 2rem; }
-h1 { color: #fff; }
-.topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-.btn { background: #3b82f6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
-.btn:hover { background: #2563eb; }
-.btn-danger { background: #ef4444; }
-.btn-danger:hover { background: #dc2626; }
-.stats { display: flex; gap: 1rem; margin: 2rem 0; }
-.card { background: #111; border: 1px solid #222; padding: 1rem 2rem; border-radius: 8px; }
-.card .num { font-size: 2rem; font-weight: bold; }
-.card .label { color: #888; font-size: 0.8rem; }
-table { width: 100%; border-collapse: collapse; background: #111; }
-th, td { padding: 0.5rem 1rem; text-align: left; border-bottom: 1px solid #222; font-size: 0.85rem; }
-th { background: #1a1a1a; color: #888; }
-a { color: #3b82f6; }
-button.ver { background: #3b82f6; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
-.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; }
-.modal.active { display: flex; align-items: center; justify-content: center; }
-.modal-content { background: #111; border: 1px solid #222; border-radius: 8px; padding: 2rem; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto; }
-.modal-content h2 { margin-bottom: 1rem; color: #fff; }
-.modal-content .row { display: flex; padding: 0.5rem 0; border-bottom: 1px solid #222; }
-.modal-content .row .label { color: #888; width: 180px; flex-shrink: 0; }
-.modal-content .row .value { font-family: monospace; word-break: break-all; }
-.modal-content .close { float: right; background: #ef4444; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer; }
-#auth-status { font-size: 0.85rem; color: #888; }
-.nft-card { background: #111; border: 1px solid #222; border-radius: 8px; padding: 1rem; width: 180px; text-align: center; }
-.nft-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-.nft-token { font-weight: bold; color: #10b981; }
-.nft-detail { font-size: 0.8rem; color: #888; }
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background-color: #000;
+    color: #00ffcc;
+    font-family: 'Share Tech Mono', monospace;
+    overflow-x: hidden;
+    min-height: 100vh;
+    cursor: crosshair;
+  }
+
+  #particles-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER HOLOGRÁFICO */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 0;
+    border-bottom: 2px solid rgba(0, 255, 204, 0.2);
+    margin-bottom: 2rem;
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, #00ffcc, transparent);
+    animation: pulse-line 3s infinite;
+  }
+  @keyframes pulse-line {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #00ffcc, #00aaff, #ff00ff, #00ffcc);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-shift 5s linear infinite;
+    filter: drop-shadow(0 0 20px rgba(0, 255, 204, 0.5));
+  }
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+
+  .btn {
+    background: transparent;
+    color: #00ffcc;
+    border: 1px solid #00ffcc;
+    padding: 0.6rem 1.5rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+  }
+  .btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0,255,204,0.4), transparent);
+    transition: left 0.5s;
+  }
+  .btn:hover::before { left: 100%; }
+  .btn:hover {
+    background: rgba(0, 255, 204, 0.1);
+    box-shadow: 0 0 20px #00ffcc;
+    text-shadow: 0 0 10px #00ffcc;
+  }
+
+  .btn-danger { border-color: #ff0055; color: #ff0055; }
+  .btn-danger:hover { background: rgba(255, 0, 85, 0.1); box-shadow: 0 0 20px #ff0055; }
+  #btn-mall { border-color: #bd00ff; color: #bd00ff; }
+  #btn-mall:hover { background: rgba(189, 0, 255, 0.1); box-shadow: 0 0 20px #bd00ff; }
+
+  /* STATS CIRCULARES */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 2rem;
+    margin: 3rem 0;
+  }
+  .stat-circle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 180px;
+    height: 180px;
+    margin: 0 auto;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 255, 204, 0.3);
+    position: relative;
+    background: radial-gradient(circle, rgba(0,255,204,0.05) 0%, transparent 70%);
+    transition: all 0.5s;
+  }
+  .stat-circle::before {
+    content: '';
+    position: absolute;
+    top: -5px; left: -5px; right: -5px; bottom: -5px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: #00ffcc;
+    animation: spin 4s linear infinite;
+  }
+  .stat-circle:hover {
+    box-shadow: 0 0 30px rgba(0, 255, 204, 0.3);
+    transform: scale(1.05);
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .stat-circle .num {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 20px #00ffcc;
+  }
+  .stat-circle .label {
+    font-size: 0.7rem;
+    color: #00ffcc;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 0.5rem;
+  }
+
+  /* TABLA HOLOGRÁFICA */
+  .table-container {
+    background: rgba(0, 10, 10, 0.6);
+    border: 1px solid rgba(0, 255, 204, 0.2);
+    border-radius: 0;
+    padding: 1rem;
+    margin-top: 2rem;
+    position: relative;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+  }
+  .table-container::before {
+    content: 'DATA_STREAM';
+    position: absolute;
+    top: -12px; left: 20px;
+    background: #000;
+    padding: 0 10px;
+    color: #00ffcc;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    padding: 1rem;
+    color: #00ffcc;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-bottom: 1px solid rgba(0, 255, 204, 0.3);
+  }
+  td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    font-size: 0.85rem;
+    transition: all 0.3s;
+  }
+  tr:hover td {
+    background: rgba(0, 255, 204, 0.05);
+    text-shadow: 0 0 10px #00ffcc;
+  }
+
+  #search-address {
+    background: rgba(0, 10, 10, 0.8);
+    border: 1px solid rgba(0, 255, 204, 0.4);
+    color: #00ffcc;
+    padding: 0.8rem 1.5rem;
+    width: 350px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.3s;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+  #search-address:focus {
+    border-color: #00ffcc;
+    box-shadow: 0 0 30px rgba(0, 255, 204, 0.3);
+  }
+  #search-address::placeholder { color: rgba(0, 255, 204, 0.3); }
+
+  /* MALL */
+  .mall-grid {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+  .mall-card {
+    background: rgba(10, 0, 20, 0.6);
+    border: 1px solid rgba(189, 0, 255, 0.3);
+    padding: 1.5rem;
+    width: 280px;
+    transition: all 0.3s;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+  }
+  .mall-card:hover {
+    transform: translateY(-5px);
+    border-color: #bd00ff;
+    box-shadow: 0 0 30px rgba(189, 0, 255, 0.2);
+  }
+  .mall-card .name {
+    font-family: 'Orbitron', sans-serif;
+    color: #bd00ff;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+  .mall-card .price {
+    font-size: 1.5rem;
+    color: #00ffcc;
+    text-shadow: 0 0 10px #00ffcc;
+  }
+
+  /* NFT */
+  .nft-card {
+    background: rgba(10, 0, 20, 0.6);
+    border: 1px solid rgba(189, 0, 255, 0.3);
+    padding: 1rem;
+    width: 200px;
+    text-align: center;
+    transition: all 0.3s;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+  }
+  .nft-card:hover {
+    transform: translateY(-5px);
+    border-color: #bd00ff;
+    box-shadow: 0 0 30px rgba(189, 0, 255, 0.2);
+  }
+
+  #score-panel {
+    background: rgba(0, 10, 10, 0.6);
+    border: 1px solid rgba(0, 255, 204, 0.2);
+    padding: 1.5rem;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+  }
+
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+  }
+  .modal.active { display: flex; align-items: center; justify-content: center; }
+  .modal-content {
+    background: #050a15;
+    border: 1px solid #00ffcc;
+    padding: 2rem;
+    max-width: 700px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 0 50px rgba(0, 255, 204, 0.2);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+  }
+  .modal-content h2 {
+    font-family: 'Orbitron', sans-serif;
+    color: #00ffcc;
+    text-shadow: 0 0 10px #00ffcc;
+  }
+  .modal-content .row {
+    display: flex;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0, 255, 204, 0.1);
+  }
+  .modal-content .label {
+    color: #00ffcc;
+    width: 180px;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+  }
+  .modal-content .value {
+    color: #fff;
+    word-break: break-all;
+    font-size: 0.85rem;
+  }
+  .close-btn {
+    float: right;
+    background: transparent;
+    color: #ff0055;
+    border: 1px solid #ff0055;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+    font-family: 'Orbitron', sans-serif;
+  }
+  .close-btn:hover { background: rgba(255, 0, 85, 0.2); }
+
+  .auth-status { color: #00ffcc; font-size: 0.8rem; letter-spacing: 1px; }
 </style>
 </head>
 <body>
-<div class="topbar">
-  <h1>AgentYarbox — Explorador</h1>
-  <div>
-    <span id="auth-status">No conectado</span>
-    <button class="btn" id="btn-connect">Conectar Wallet</button>
-    <button class="btn btn-danger" id="btn-logout" style="display:none">Desconectar</button>
-  </div>
-</div>
 
-<div style="margin-bottom: 1rem; display: flex; gap: 0.5rem;">
-  <input id="search-address" placeholder="Buscar por dirección (0x...)" style="padding: 0.6rem; border-radius: 6px; border: 1px solid #333; background: #111; color: #e0e0e0; width: 350px; font-family: monospace;" />
-  <button class="btn" id="btn-search">Buscar</button>
-  <button class="btn btn-danger" id="btn-clear" style="display:none">Limpiar</button>
-</div>
+<canvas id="particles-canvas"></canvas>
 
-<div class="stats">
-  <div class="card"><div class="num" id="total">—</div><div class="label">Total eventos</div></div>
-  <div class="card"><div class="num" id="committed" style="color:#f59e0b">—</div><div class="label">Commiteadas</div></div>
-  <div class="card"><div class="num" id="settled" style="color:#10b981">—</div><div class="label">Liquidadas</div></div>
-  <div class="card"><div class="num" id="inconsistent" style="color:#ef4444">—</div><div class="label">Inconsistentes</div></div>
-</div>
-
-
-<div id="nfts-section" style="display:none; margin-bottom: 2rem;">
-  <h3 style="margin-bottom: 1rem; color: #fff;">🏆 NFTs de Reputación</h3>
-  <div id="score-panel" style="background: #111; border: 1px solid #333; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; display: flex; gap: 2rem; align-items: center;">
-    <div style="font-size: 2.5rem;" id="tier-icon">⚪</div>
-    <div>
-      <div style="font-size: 1.2rem; color: #fff; font-weight: bold;" id="tier-name">Sin nivel</div>
-      <div style="color: #888; font-size: 0.9rem;">Score: <span id="score-value" style="color: #10b981; font-weight: bold;">0</span> / 100</div>
-    </div>
-    <div style="border-left: 1px solid #333; padding-left: 2rem;">
-      <div style="color: #888; font-size: 0.8rem;">Pagos exitosos: <span id="stat-nfts" style="color: #fff;">0</span></div>
-      <div style="color: #888; font-size: 0.8rem;">Volumen total: <span id="stat-volume" style="color: #fff;">0 MON</span></div>
-      <div style="color: #888; font-size: 0.8rem;">Fallos: <span id="stat-fails" style="color: #ef4444;">0</span></div>
+<div class="container">
+  <div class="header">
+    <h1>AGENT YARBOX</h1>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <span class="auth-status" id="auth-status">NO CONECTADO</span>
+      <button class="btn" id="btn-connect">Conectar Wallet</button>
+      <button class="btn btn-danger" id="btn-logout" style="display:none">Desconectar</button>
+      <button class="btn" id="btn-mall">El Mall</button>
     </div>
   </div>
-  <div id="nfts-grid" style="display: flex; gap: 1rem; flex-wrap: wrap;"></div>
+
+  <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem;">
+    <input id="search-address" placeholder="BUSCAR DIRECCIÓN (0x...)" />
+    <button class="btn" id="btn-search">Escanear</button>
+    <button class="btn btn-danger" id="btn-clear" style="display:none">Limpiar</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat-circle"><div class="num" id="total">0</div><div class="label">Total Eventos</div></div>
+    <div class="stat-circle"><div class="num" id="committed" style="color:#ffaa00">0</div><div class="label">Commiteadas</div></div>
+    <div class="stat-circle"><div class="num" id="settled" style="color:#00ff88">0</div><div class="label">Liquidadas</div></div>
+    <div class="stat-circle"><div class="num" id="inconsistent" style="color:#ff0055">0</div><div class="label">Inconsistentes</div></div>
+  </div>
+
+  <div id="nfts-section" style="display:none; margin-bottom: 2rem;">
+    <h3 style="font-family: 'Orbitron'; color: #bd00ff; margin-bottom: 1rem; text-shadow: 0 0 10px #bd00ff;">REPUTATION NFTs</h3>
+    <div id="score-panel">
+      <div style="font-size: 3rem;" id="tier-icon">⚪</div>
+      <div>
+        <div style="font-family: 'Orbitron'; font-size: 1.5rem; color: #fff;" id="tier-name">Sin nivel</div>
+        <div style="color: #6b8fa8;">Score: <span id="score-value" style="color: #00ffcc; font-weight: bold;">0</span> / 100</div>
+      </div>
+      <div style="border-left: 1px solid rgba(0,255,204,0.2); padding-left: 2rem;">
+        <div style="color: #6b8fa8; font-size: 0.8rem;">Pagos exitosos: <span id="stat-nfts" style="color: #fff;">0</span></div>
+        <div style="color: #6b8fa8; font-size: 0.8rem;">Volumen: <span id="stat-volume" style="color: #fff;">0 MON</span></div>
+        <div style="color: #6b8fa8; font-size: 0.8rem;">Fallos: <span id="stat-fails" style="color: #ff0055;">0</span></div>
+      </div>
+    </div>
+    <div id="nfts-grid" style="display: flex; gap: 1rem; flex-wrap: wrap;"></div>
+  </div>
+
+  <div id="mall-section" style="display:none; margin-bottom: 2rem;">
+    <h3 style="font-family: 'Orbitron'; color: #bd00ff; margin-bottom: 1rem; text-shadow: 0 0 10px #bd00ff;">AGENT MALL</h3>
+    <div id="mall-grid" class="mall-grid"></div>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead><tr><th>Intent ID</th><th>Evento</th><th>Agente</th><th>Monto</th><th>Bloque</th><th>Tx</th><th>Tiquete</th></tr></thead>
+      <tbody id="events"><tr><td colspan="7" style="text-align:center; color:#6b8fa8;">Cargando datos...</td></tr></tbody>
+    </table>
+  </div>
 </div>
-
-
-<table>
-<thead><tr><th>Intent ID</th><th>Evento</th><th>Agente</th><th>Monto</th><th>Bloque</th><th>Tx</th><th>Tiquete</th></tr></thead>
-<tbody id="events"><tr><td colspan="7">Cargando...</td></tr></tbody>
-</table>
 
 <div class="modal" id="modal">
   <div class="modal-content">
-    <button class="close" onclick="cerrarModal()">Cerrar</button>
-    <h2>Tiquete de Auditoría</h2>
+    <button class="close-btn" onclick="cerrarModal()">CERRAR</button>
+    <h2>AUDIT RECEIPT</h2>
     <div id="modal-body"></div>
   </div>
 </div>
@@ -100,6 +412,73 @@ button.ver { background: #3b82f6; color: white; border: none; padding: 0.3rem 0.
 <script>
 const API = 'http://localhost:3001/api';
 
+// PARTÍCULAS DE FONDO
+const canvas = document.getElementById('particles-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let mouse = { x: 0, y: 0 };
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize); resize();
+
+class Particle {
+  constructor() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.vx = (Math.random() - 0.5) * 0.5;
+    this.vy = (Math.random() - 0.5) * 0.5;
+    this.size = Math.random() * 2 + 0.5;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+    
+    const dx = mouse.x - this.x;
+    const dy = mouse.y - this.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 150) {
+      this.vx -= dx * 0.0001;
+      this.vy -= dy * 0.0001;
+    }
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 255, 204, 0.5)';
+    ctx.fill();
+  }
+}
+
+for (let i = 0; i < 100; i++) particles.push(new Particle());
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => { p.update(); p.draw(); });
+  // Dibujar líneas entre partículas cercanas
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 120) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(0, 255, 204, ${0.1 * (1 - dist / 120)})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(animate);
+}
+animate();
+
+window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+// LÓGICA DE LA APP (sin cambios)
 async function checkAuth() {
   const r = await fetch(API + '/auth/me', { credentials: 'include' });
   const data = await r.json();
@@ -107,11 +486,11 @@ async function checkAuth() {
   const btnConnect = document.getElementById('btn-connect');
   const btnLogout = document.getElementById('btn-logout');
   if (data.authenticated) {
-    status.textContent = 'Conectado: ' + data.address.slice(0, 6) + '...' + data.address.slice(-4);
+    status.textContent = 'CONECTADO: ' + data.address.slice(0, 6) + '...' + data.address.slice(-4);
     btnConnect.style.display = 'none';
     btnLogout.style.display = 'inline-block';
   } else {
-    status.textContent = 'No conectado';
+    status.textContent = 'NO CONECTADO';
     btnConnect.style.display = 'inline-block';
     btnLogout.style.display = 'none';
   }
@@ -166,8 +545,8 @@ async function load() {
       return `<tr>
         <td>#${ev.intentId}</td><td>${badge}</td><td>${ev.agent || '—'}</td>
         <td>${monto}</td><td>${ev.blockNumber}</td>
-        <td><a href="https://monadscan.com/tx/${ev.transactionHash}" target="_blank">${ev.transactionHash.slice(0,10)}...</a></td>
-        <td><button class="ver" onclick="verTiquete('${ev.intentId}')">Ver tiquete</button></td>
+        <td><a href="https://monadscan.com/tx/${ev.transactionHash}" target="_blank" style="color:#00ffcc;">${ev.transactionHash.slice(0,10)}...</a></td>
+        <td><button class="btn" style="padding:0.3rem 0.8rem; font-size:0.7rem;" onclick="verTiquete('${ev.intentId}')">Ver</button></td>
       </tr>`;
     }).join('');
   } catch(err) {
@@ -182,19 +561,17 @@ async function cargarNFTs(address) {
   try {
     const r = await fetch(API + '/nfts/' + address, { credentials: 'include' });
     const data = await r.json();
-    
-    if (data.total === 0) { 
-      section.style.display = 'block'; 
+    if (data.total === 0) {
+      section.style.display = 'block';
       document.getElementById('tier-icon').textContent = '⚪';
       document.getElementById('tier-name').textContent = 'Sin nivel';
       document.getElementById('score-value').textContent = '0';
       document.getElementById('stat-nfts').textContent = '0';
       document.getElementById('stat-volume').textContent = '0 MON';
       document.getElementById('stat-fails').textContent = '0';
-      grid.innerHTML = '<p style="color:#888;">Este agente aún no tiene NFTs de reputación.</p>';
-      return; 
+      grid.innerHTML = '<p style="color:#6b8fa8;">Este agente aún no tiene NFTs de reputación.</p>';
+      return;
     }
-    
     section.style.display = 'block';
     document.getElementById('tier-icon').textContent = data.tierIcon;
     document.getElementById('tier-name').textContent = data.tier;
@@ -202,27 +579,66 @@ async function cargarNFTs(address) {
     document.getElementById('stat-nfts').textContent = data.total;
     document.getElementById('stat-volume').textContent = data.totalVolume + ' MON';
     document.getElementById('stat-fails').textContent = data.inconsistent;
-    
     grid.innerHTML = data.nfts.map(nft => `
       <div class="nft-card">
-        <img src="https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=200&h=120&fit=crop" alt="AI Agent" style="width: 100%; height: 120px; object-fit: cover; border-radius: 6px; margin-bottom: 0.5rem;" />
-        <div class="nft-token">Token #${nft.tokenId}</div>
-        <div class="nft-detail">Intent #${nft.intentId}</div>
-        <div class="nft-detail">${(Number(nft.maxAmount)/1e18).toFixed(4)} MON</div>
-        <a href="https://monadscan.com/nft/0xDE2153656df0dd9b370bc9796A5dd04Ad24BF4f8/${nft.tokenId}" target="_blank" style="display:block; margin-top:0.5rem; font-size:0.8rem;">Ver en MonadScan</a>
+        <img src="https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=200&h=120&fit=crop" alt="AI Agent" style="width: 100%; height: 120px; object-fit: cover; margin-bottom: 0.5rem; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);" />
+        <div class="nft-token" style="font-family:'Orbitron'; color:#00ffcc; font-size:1.1rem;">Token #${nft.tokenId}</div>
+        <div style="color:#6b8fa8; font-size:0.8rem;">Intent #${nft.intentId}</div>
+        <div style="color:#00ffcc; font-size:0.9rem;">${(Number(nft.maxAmount)/1e18).toFixed(4)} MON</div>
+        <a href="https://monadscan.com/nft/0xDE2153656df0dd9b370bc9796A5dd04Ad24BF4f8/${nft.tokenId}" target="_blank" style="display:block; margin-top:0.5rem; color:#bd00ff; font-size:0.8rem;">Ver en MonadScan</a>
       </div>
     `).join('');
   } catch (e) { console.log('Error NFTs:', e); }
 }
 
+async function cargarMall() {
+  const section = document.getElementById('mall-section');
+  const grid = document.getElementById('mall-grid');
+  section.style.display = 'block';
+  grid.innerHTML = '<p style="color:#6b8fa8;">Cargando servicios...</p>';
+  try {
+    const r = await fetch(API + '/services', { credentials: 'include' });
+    const data = await r.json();
+    if (data.services.length === 0) {
+      grid.innerHTML = '<p style="color:#6b8fa8;">Aún no hay servicios registrados.</p>';
+      return;
+    }
+    grid.innerHTML = data.services.map(s => `
+      <div class="mall-card">
+        <div class="name">${s.name}</div>
+        <div style="color:#6b8fa8; font-size:0.85rem; margin-bottom:0.5rem;">${s.description}</div>
+        <div class="price">${(Number(s.price)/1e18).toFixed(4)} MON</div>
+        <div style="color:#6b8fa8; font-size:0.8rem;">Proveedor: ${s.provider.slice(0, 6)}...${s.provider.slice(-4)}</div>
+        <div style="color:#6b8fa8; font-size:0.8rem;">Reputación: ${s.reputationRequired} NFTs</div>
+        <div style="margin-top:0.5rem; font-size:0.8rem; color:${s.active ? '#00ff88' : '#ff0055'};">${s.active ? '🟢 ABIERTO' : '🔴 CERRADO'}</div>
+        <button class="btn" style="margin-top:0.5rem; width:100%; border-color:#bd00ff; color:#bd00ff;" onclick="comprarServicio(${s.serviceId}, '${s.provider}', '${s.price}')">COMPRAR</button>
+      </div>
+    `).join('');
+  } catch (e) {
+    grid.innerHTML = '<p style="color:#ff0055;">Error: ' + e.message + '</p>';
+  }
+}
+
+async function comprarServicio(serviceId, provider, price) {
+  if (!window.ethereum) { alert('Necesitas MetaMask.'); return; }
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    const tx = await window.ethereum.request({
+      method: 'eth_sendTransaction',
+      params: [{ from: accounts[0], to: provider, value: '0x' + BigInt(price).toString(16) }],
+    });
+    alert('Pago enviado! Tx: ' + tx);
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
 async function verTiquete(intentId) {
   const modal = document.getElementById('modal');
   const body = document.getElementById('modal-body');
-  body.innerHTML = '<p>Cargando tiquete...</p>';
+  body.innerHTML = '<p style="color:#6b8fa8;">Cargando tiquete...</p>';
   modal.classList.add('active');
   try {
     const r = await (await fetch(API + '/receipt/' + intentId, { credentials: 'include' })).json();
-    if (r.error) { body.innerHTML = '<p style="color:#ef4444">Error: ' + r.error + '</p>'; return; }
+    if (r.error) { body.innerHTML = '<p style="color:#ff0055">Error: ' + r.error + '</p>'; return; }
     body.innerHTML = `
       <div class="row"><div class="label">Intent ID</div><div class="value">#${r.intentId}</div></div>
       <div class="row"><div class="label">Agente</div><div class="value">${r.agent}</div></div>
@@ -231,29 +647,32 @@ async function verTiquete(intentId) {
       <div class="row"><div class="label">Payment Nonce</div><div class="value">${r.paymentNonce}</div></div>
       <div class="row"><div class="label">Result Hash</div><div class="value">${r.resultHash}</div></div>
       <div class="row"><div class="label">Timestamp</div><div class="value">${r.timestamp}</div></div>
-      <div class="row"><div class="label">Liquidado</div><div class="value">${r.settled ? '🟢 Sí' : '🟡 No'}</div></div>
-      <div class="row"><div class="label">Inconsistente</div><div class="value">${r.inconsistent ? '🔴 Sí' : '🟢 No'}</div></div>
+      <div class="row"><div class="label">Liquidado</div><div class="value" style="color:${r.settled ? '#00ff88' : '#ffaa00'}">${r.settled ? 'SÍ' : 'NO'}</div></div>
+      <div class="row"><div class="label">Inconsistente</div><div class="value" style="color:${r.inconsistent ? '#ff0055' : '#00ff88'}">${r.inconsistent ? 'SÍ' : 'NO'}</div></div>
     `;
-  } catch(e) { body.innerHTML = '<p style="color:#ef4444">Error: ' + e.message + '</p>'; }
+  } catch(e) { body.innerHTML = '<p style="color:#ff0055">Error: ' + e.message + '</p>'; }
 }
 
 function cerrarModal() { document.getElementById('modal').classList.remove('active'); }
 
 document.getElementById('btn-connect').addEventListener('click', conectarWallet);
 document.getElementById('btn-logout').addEventListener('click', logout);
-
 document.getElementById('btn-search').addEventListener('click', () => {
   const addr = document.getElementById('search-address').value.trim();
   document.getElementById('btn-clear').style.display = 'inline-block';
   load();
   cargarNFTs(addr);
 });
-
 document.getElementById('btn-clear').addEventListener('click', () => {
   document.getElementById('search-address').value = '';
   document.getElementById('btn-clear').style.display = 'none';
   document.getElementById('nfts-section').style.display = 'none';
   load();
+});
+document.getElementById('btn-mall').addEventListener('click', () => {
+  document.getElementById('mall-section').style.display = 'block';
+  document.getElementById('nfts-section').style.display = 'none';
+  cargarMall();
 });
 
 checkAuth();
