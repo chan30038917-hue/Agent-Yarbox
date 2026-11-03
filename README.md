@@ -116,3 +116,22 @@ El explorador web calcula automáticamente un **Score de Reputación** (0-100) p
 | 💎 Diamante | +200 NFTs y 0 fallos |
 
 El Score y el Tier se muestran en el explorador al buscar la dirección de un agente, junto con sus NFTs de reputación.
+---
+
+## Agent Mall (Centro Comercial de Agentes)
+
+El ecosistema incluye un **Directorio de Servicios** (`ServiceDirectory`) donde cualquier empresa o agente puede registrar sus APIs/servicios y ponerles un precio.
+
+### ¿Cómo funciona?
+1. **Un proveedor registra un servicio** en el contrato `ServiceDirectory` (nombre, precio, endpoint, reputación mínima).
+2. **Un agente entra al explorador web**, ve el servicio en la pestaña "El Mall", y hace clic en "Comprar".
+3. **El backend ejecuta el pago** usando `@chan30/mandate-sdk` (commit → pay → settle).
+4. **Se acuña un NFT de reputación** para el agente y se cobra la comisión del 0.5% para el dueño del Mall.
+
+### Contrato del Mall
+- **Dirección**: `0xCD9DdC0A0abB73a65F0AbF02Ec940F30661ca2AB`
+- **Gobernanza**: Multisig (2 de 3 firmas)
+- **Seguridad**: Reentrancy Guard, Pausable, Zero-Address Check, Límites de servicios.
+
+### Reputación
+El contrato consulta el `ReputationNFT` para verificar que el agente tiene los NFTs mínimos requeridos antes de dejarlo comprar. Un agente con Score alto (Oro/Diamante) tiene acceso a servicios VIP.
