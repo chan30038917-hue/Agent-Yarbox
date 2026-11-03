@@ -4,6 +4,9 @@ import db from '../indexer/db.mjs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { createPublicClient, http } from 'viem';
+import { MandateSDK } from '@chan30/mandate-sdk';
+import { Wallet, parseEther, keccak256, toUtf8Bytes, Contract } from 'ethers';
+import { readFileSync } from 'fs';
 import { SiweMessage } from 'siwe';
 import { getIronSession } from 'iron-session';
 import crypto from 'crypto';
@@ -27,6 +30,15 @@ app.use(express.static(join(__dirname, '..', 'web')));
 const client = createPublicClient({ transport: http('https://rpc3.monad.xyz') });
 const CONTRACT = '0x4D0D993e6FF19279dF0E69d9cd9cC946480973dC';
 
+
+
+const SERVICE_DIRECTORY_ADDRESS = '0xCD9DdC0A0abB73a65F0AbF02Ec940F30661ca2AB';
+const SERVICE_DIRECTORY_ABI = [
+  { "inputs": [{"internalType": "address", "name": "_reputationNFT", "type": "address"}], "stateMutability": "nonpayable", "type": "constructor" },
+  { "inputs": [], "name": "getServicesCount", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function" },
+  { "inputs": [{"internalType": "uint256", "name": "_serviceId", "type": "uint256"}], "name": "getService", "outputs": [{"components": [{"internalType": "address", "name": "provider", "type": "address"}, {"internalType": "string", "name": "name", "type": "string"}, {"internalType": "string", "name": "description", "type": "string"}, {"internalType": "uint256", "name": "price", "type": "uint256"}, {"internalType": "string", "name": "endpoint", "type": "string"}, {"internalType": "bool", "name": "active", "type": "bool"}, {"internalType": "uint256", "name": "reputationRequired", "type": "uint256"}], "internalType": "struct ServiceDirectory.Service", "name": "", "type": "tuple"}], "stateMutability": "view", "type": "function" },
+  { "inputs": [{"internalType": "address", "name": "_agent", "type": "address"}, {"internalType": "uint256", "name": "_serviceId", "type": "uint256"}], "name": "canPurchase", "outputs": [{"internalType": "bool", "name": "", "type": "bool"}], "stateMutability": "view", "type": "function" }
+];
 
 const NFT_ADDRESS = '0xDE2153656df0dd9b370bc9796A5dd04Ad24BF4f8';
 const NFT_ABI = [
@@ -268,6 +280,135 @@ app.get('/api/nfts/:address', async (req, res) => {
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+
+app.get('/api/services', async (req, res) => {
+  try {
+    const count = await client.readContract({
+      address: SERVICE_DIRECTORY_ADDRESS,
+      abi: SERVICE_DIRECTORY_ABI,
+      functionName: 'getServicesCount',
+    });
+    
+    const services = [];
+    for (let i = 0; i < Number(count); i++) {
+      try {
+        const s = await client.readContract({
+          address: SERVICE_DIRECTORY_ADDRESS,
+          abi: SERVICE_DIRECTORY_ABI,
+          functionName: 'getService',
+          args: [i],
+        });
+        // s es un objeto con las propiedades: provider, name, description, price, endpoint, active, reputationRequired
+        services.push({
+          serviceId: i.toString(),
+          provider: s.provider,
+          name: s.name,
+          description: s.description,
+          price: s.price.toString(),
+          endpoint: s.endpoint,
+          active: s.active,
+          reputationRequired: s.reputationRequired.toString(),
+        });
+      } catch (e) {
+        console.log('Error leyendo servicio ' + i + ': ' + e.message.slice(0, 80));
+      }
+    }
+    res.json({ services });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
+app.post('/api/buy', async (req, res) => {
+  try {
+    const { serviceId, agentId } = req.body;
+    if (!serviceId || !agentId) return res.status(400).json({ error: 'Faltan serviceId o agentId' });
+
+    // Leer mandatos y buscar el agente
+    const mandatos = JSON.parse(readFileSync('/home/usuariochan/aethel-autapon/integration/mandatos-agentes.json', 'utf8'));
+    const agente = mandatos.find(m => m.agentId === agentId);
+    if (!agente) return res.status(404).json({ error: 'Agente no encontrado' });
+
+    // Leer el servicio del contrato
+    const servicio = await client.readContract({
+      address: SERVICE_DIRECTORY_ADDRESS,
+      abi: SERVICE_DIRECTORY_ABI,
+      functionName: 'getService',
+      args: [BigInt(serviceId)],
+    });
+
+    if (!servicio.active) return res.status(400).json({ error: 'Servicio cerrado' });
+
+    // Verificar reputación
+    const puedeComprar = await client.readContract({
+      address: SERVICE_DIRECTORY_ADDRESS,
+      abi: SERVICE_DIRECTORY_ABI,
+      functionName: 'canPurchase',
+      args: [agente.address, BigInt(serviceId)],
+    });
+    if (!puedeComprar) return res.status(403).json({ error: 'Reputación insuficiente' });
+
+    // Crear SDK y AgentYarbox
+    const provider = new (await import('ethers')).JsonRpcProvider('https://rpc3.monad.xyz', 143);
+    const sdk = new MandateSDK({ privateKey: agente.privateKey, rpcUrl: 'https://rpc3.monad.xyz', chainId: 143 });
+    
+    const { AgentYarbox } = await import('../../index.js');
+    const yarbox = new AgentYarbox({ address: '0x4D0D993e6FF19279dF0E69d9cd9cC946480973dC', privateKey: agente.privateKey });
+
+    // 1. Commit Intent
+    const totalBefore = await client.readContract({
+      address: '0x4D0D993e6FF19279dF0E69d9cd9cC946480973dC',
+      abi: [{ "inputs": [], "name": "totalIntents", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function" }],
+      functionName: 'totalIntents',
+    });
+
+    const txCommit = await yarbox.commitIntent({
+      intentHash: keccak256(toUtf8Bytes('buy-' + Date.now())),
+      conditionHash: keccak256(toUtf8Bytes('service-' + serviceId)),
+      mandateId: agente.mandateId,
+      maxAmount: servicio.price,
+      erc8004AgentId: 0n,
+    });
+
+    // Esperar confirmación
+    await new Promise(r => setTimeout(r, 5000));
+    const intentId = Number(totalBefore);
+
+    // 2. Pay con SDK
+    const payment = await sdk.pay({
+      mandateId: agente.mandateId,
+      passkey: agente.passkey,
+      amount: (Number(servicio.price) / 1e18).toString(),
+      recipient: '0xF6805F61820A860db4B7462Bc9940793fC8ed22A',
+      gasLimit: 500000,
+    });
+
+    await new Promise(r => setTimeout(r, 5000));
+
+    // 3. Settle
+    const txSettle = await yarbox.settleIntent({
+      intentId,
+      paymentNonce: payment.paymentNonce,
+      resultHash: keccak256(toUtf8Bytes('result-' + payment.tx)),
+    });
+
+    await new Promise(r => setTimeout(r, 5000));
+
+    // 4. Acuñar NFT
+    const ownerKey = process.env.PRIVATE_KEY || readFileSync('/home/usuariochan/agent-yarbox/.env', 'utf8').match(/PRIVATE_KEY=(.*)/)[1].trim();
+    const ownerWallet = new Wallet(ownerKey, provider);
+    const nftContract = new Contract('0xDE2153656df0dd9b370bc9796A5dd04Ad24BF4f8', [{ "inputs": [{"internalType": "address", "name": "_agent", "type": "address"}, {"internalType": "uint256", "name": "_intentId", "type": "uint256"}, {"internalType": "uint256", "name": "_maxAmount", "type": "uint256"}, {"internalType": "bytes32", "name": "_paymentNonce", "type": "bytes32"}, {"internalType": "uint256", "name": "_timestamp", "type": "uint256"}], "name": "mintReceipt", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "nonpayable", "type": "function" }], ownerWallet);
+    
+    const txMint = await nftContract.mintReceipt(agente.address, intentId, servicio.price, payment.paymentNonce, Math.floor(Date.now() / 1000));
+    await txMint.wait();
+
+    res.json({ ok: true, intentId, tx: payment.tx, nftTx: txMint.hash, comision: payment.fee });
+  } catch (e) {
+    res.status(500).json({ error: e.message.slice(0, 200) });
   }
 });
 

@@ -334,6 +334,38 @@
   .close-btn:hover { background: rgba(255, 0, 85, 0.2); }
 
   .auth-status { color: #00ffcc; font-size: 0.8rem; letter-spacing: 1px; }
+
+  .tier-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    text-align: center;
+    border: 2px solid;
+    box-shadow: 0 0 15px;
+    position: relative;
+  }
+  .tier-badge::after {
+    content: '';
+    position: absolute;
+    top: -4px; left: -4px; right: -4px; bottom: -4px;
+    border-radius: 50%;
+    border: 1px dashed currentColor;
+    animation: spin 10s linear infinite;
+    opacity: 0.5;
+  }
+  .tier-bronce { color: #cd7f32; background: rgba(205, 127, 50, 0.1); }
+  .tier-plata { color: #c0c0c0; background: rgba(192, 192, 192, 0.1); }
+  .tier-oro { color: #ffd700; background: rgba(255, 215, 0, 0.1); }
+  .tier-diamante { color: #00ffff; background: rgba(0, 255, 255, 0.1); box-shadow: 0 0 25px #00ffff; }
+  .tier-sin { color: #555; background: rgba(85, 85, 85, 0.1); }
+
 </style>
 </head>
 <body>
@@ -573,7 +605,17 @@ async function cargarNFTs(address) {
       return;
     }
     section.style.display = 'block';
-    document.getElementById('tier-icon').textContent = data.tierIcon;
+    
+    const tierMap = {
+      'Bronce': 'tier-bronce',
+      'Plata': 'tier-plata',
+      'Oro': 'tier-oro',
+      'Diamante': 'tier-diamante',
+      'Sin nivel': 'tier-sin'
+    };
+    const tierClass = tierMap[data.tier] || 'tier-sin';
+    document.getElementById('tier-icon').innerHTML = `<div class="tier-badge ${tierClass}">${data.tier}</div>`;
+    
     document.getElementById('tier-name').textContent = data.tier;
     document.getElementById('score-value').textContent = data.score;
     document.getElementById('stat-nfts').textContent = data.total;
@@ -611,7 +653,7 @@ async function cargarMall() {
         <div style="color:#6b8fa8; font-size:0.8rem;">Proveedor: ${s.provider.slice(0, 6)}...${s.provider.slice(-4)}</div>
         <div style="color:#6b8fa8; font-size:0.8rem;">Reputación: ${s.reputationRequired} NFTs</div>
         <div style="margin-top:0.5rem; font-size:0.8rem; color:${s.active ? '#00ff88' : '#ff0055'};">${s.active ? '🟢 ABIERTO' : '🔴 CERRADO'}</div>
-        <button class="btn" style="margin-top:0.5rem; width:100%; border-color:#bd00ff; color:#bd00ff;" onclick="comprarServicio(${s.serviceId}, '${s.provider}', '${s.price}')">COMPRAR</button>
+        <button class="btn" style="margin-top:0.5rem; width:100%; border-color:#bd00ff; color:#bd00ff;" onclick="comprarServicio('${s.serviceId}', '${s.provider}', '${s.price}')">COMPRAR</button>
       </div>
     `).join('');
   } catch (e) {
@@ -620,15 +662,26 @@ async function cargarMall() {
 }
 
 async function comprarServicio(serviceId, provider, price) {
-  if (!window.ethereum) { alert('Necesitas MetaMask.'); return; }
+  const agenteId = prompt('Ingresa tu agentId (ej. agente-03):');
+  if (!agenteId) return;
+  
+  alert('Procesando compra... Esto puede tardar unos segundos.');
   try {
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    const tx = await window.ethereum.request({
-      method: 'eth_sendTransaction',
-      params: [{ from: accounts[0], to: provider, value: '0x' + BigInt(price).toString(16) }],
+    const r = await fetch(API + '/buy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ serviceId, agentId: agenteId })
     });
-    alert('Pago enviado! Tx: ' + tx);
-  } catch (e) { alert('Error: ' + e.message); }
+    const data = await r.json();
+    if (data.ok) {
+      alert('✅ Compra exitosa! Intent: ' + data.intentId + ' | NFT: ' + data.nftTx + ' | Comisión: ' + data.comision);
+      await load();
+    } else {
+      alert('Error: ' + data.error);
+    }
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
 }
 
 async function verTiquete(intentId) {
