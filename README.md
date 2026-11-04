@@ -49,7 +49,7 @@ En términos simples: es un **notario on-chain para agentes**. El agente dice *"
 | Contrato | Dirección | Verificación |
 |---|---|---|
 | **AgentYarbox** | `0x4D0D993e6FF19279dF0E69d9cd9cC946480973dC` | ✅ `exact_match` |
-| **PaymentGate (Mandate)** | `0xc8b31cc4E238905D96AAe66A06Ebc821b4E399aD` | ✅ `already_verified` |
+| **PaymentGate (Mandate)** | `0x0396DF8b62693E4F0E5d9873720c8aBF213CC6f6` | ✅ `already_verified` |
 | **MandateRegistry (Mandate)** | `0x7695Cf7a86d6D08b5283a69c10f94b014D421649` | ✅ `already_verified` |
 
 ---
