@@ -3,16 +3,16 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import Database from 'better-sqlite3';
 
-// Crear la carpeta data si no existe
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// La carpeta 'data' está al mismo nivel que 'indexer'
 const dbDir = join(__dirname, '..', 'data');
 mkdirSync(dbDir, { recursive: true });
 
 const dbPath = join(dbDir, 'events.db');
 const db = new Database(dbPath);
 
-// Crear tabla si no existe
 db.exec(`
   CREATE TABLE IF NOT EXISTS events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
