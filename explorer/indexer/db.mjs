@@ -12,25 +12,41 @@ mkdirSync(dbDir, { recursive: true, mode: 0o777 });
 const dbPath = join(dbDir, 'events.db');
 const db = new Database(dbPath);
 
+// Esquema que coincide con lo que el indexador espera
 db.exec(`
   CREATE TABLE IF NOT EXISTS events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    intent_id TEXT,
-    event_type TEXT,
+    eventName TEXT,
+    intentId TEXT,
     agent TEXT,
-    amount TEXT,
-    block_number INTEGER,
-    tx_hash TEXT,
-    timestamp INTEGER,
+    mandateId TEXT,
+    maxAmount TEXT,
+    paymentNonce TEXT,
+    resultHash TEXT,
+    timestamp TEXT,
+    settled INTEGER DEFAULT 0,
+    inconsistent INTEGER DEFAULT 0,
+    reason TEXT,
+    blockNumber INTEGER,
+    transactionHash TEXT,
+    tenant_id TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `);
 
-// Añadir tenant_id si la tabla ya existía sin esa columna
+// Tabla de checkpoint (el indexador también la usa)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS checkpoint (
+    id INTEGER PRIMARY KEY,
+    lastBlock INTEGER
+  )
+`);
+
+// Insertar checkpoint inicial si no existe
 try {
-  db.exec(`ALTER TABLE events ADD COLUMN tenant_id TEXT`);
+  db.prepare('INSERT OR IGNORE INTO checkpoint (id, lastBlock) VALUES (1, 117502959)').run();
 } catch (e) {
-  // La columna ya existe, no hacer nada
+  // Ya existe
 }
 
 export default db;
