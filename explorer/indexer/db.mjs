@@ -6,9 +6,8 @@ import Database from 'better-sqlite3';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// La carpeta 'data' está al mismo nivel que 'indexer'
 const dbDir = join(__dirname, '..', 'data');
-mkdirSync(dbDir, { recursive: true });
+mkdirSync(dbDir, { recursive: true, mode: 0o777 });
 
 const dbPath = join(dbDir, 'events.db');
 const db = new Database(dbPath);
