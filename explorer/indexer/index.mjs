@@ -22,11 +22,11 @@ const insertEvent = db.prepare(`
   INSERT OR IGNORE INTO events (
     eventName, intentId, agent, mandateId, maxAmount,
     paymentNonce, resultHash, timestamp, settled, inconsistent, reason,
-    blockNumber, transactionHash
+    block_number, transactionHash
   ) VALUES (
     @eventName, @intentId, @agent, @mandateId, @maxAmount,
     @paymentNonce, @resultHash, @timestamp, @settled, @inconsistent, @reason,
-    @blockNumber, @transactionHash
+    @block_number, @transactionHash
   )
 `);
 
@@ -60,7 +60,7 @@ for (let from = lastBlock; from <= currentBlock; from += BLOCK_CHUNK) {
       settled: 0,
       inconsistent: 0,
       reason: null,
-      blockNumber: Number(log.blockNumber),
+      block_number: Number(log.block_number),
       transactionHash: log.transactionHash,
     });
   }
@@ -78,7 +78,7 @@ for (let from = lastBlock; from <= currentBlock; from += BLOCK_CHUNK) {
       settled: 1,
       inconsistent: 0,
       reason: null,
-      blockNumber: Number(log.blockNumber),
+      block_number: Number(log.block_number),
       transactionHash: log.transactionHash,
     });
   }
@@ -96,7 +96,7 @@ for (let from = lastBlock; from <= currentBlock; from += BLOCK_CHUNK) {
       settled: 0,
       inconsistent: 1,
       reason: log.args.reason,
-      blockNumber: Number(log.blockNumber),
+      block_number: Number(log.block_number),
       transactionHash: log.transactionHash,
     });
   }
