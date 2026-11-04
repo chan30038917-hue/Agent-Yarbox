@@ -211,4 +211,6 @@ app.post('/register-service', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message.slice(0, 200) }); }
 });
 
-app.listen(PORT, () => { console.log(`API corriendo en http://localhost:${PORT}`); });
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`API corriendo en el puerto ${PORT}`);
+});
