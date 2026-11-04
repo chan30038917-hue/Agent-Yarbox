@@ -80,7 +80,7 @@ app.get('/api/events', async (req, res) => {
   const offset = parseInt(req.query.offset) || 0;
   let query = 'SELECT * FROM events WHERE (tenant_id = ? OR agent = ?)';
   const params = [tenantId, tenantId];
-  query += ' ORDER BY blockNumber DESC LIMIT ? OFFSET ?';
+  query += ' ORDER BY block_number DESC LIMIT ? OFFSET ?';
   params.push(limit, offset);
   const events = db.prepare(query).all(...params);
   res.json({ events, limit, offset, tenantId });
