@@ -1,3 +1,17 @@
+import { mkdirSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import Database from 'better-sqlite3';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const dbDir = join(__dirname, '..', 'data');
+mkdirSync(dbDir, { recursive: true, mode: 0o777 });
+
+const dbPath = join(dbDir, 'events.db');
+const db = new Database(dbPath);
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
