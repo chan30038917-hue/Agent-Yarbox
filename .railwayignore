@@ -1,0 +1,13 @@
+.env
+*.env
+wallet-key.txt
+*.key
+*.pem
+node_modules/
+.git/
+*.bak
+*.bak2
+*.bak3
+test-*.mjs
+firmar-pago.mjs
+simular.mjs

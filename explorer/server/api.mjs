@@ -8,6 +8,9 @@ import { SiweMessage } from 'siwe';
 import { getIronSession } from 'iron-session';
 import crypto from 'crypto';
 import { readFileSync } from 'fs';
+import { paymentMiddleware, x402ResourceServer } from "@x402/express";
+import { ExactEvmScheme } from "@x402/evm/exact/server";
+import { HTTPFacilitatorClient } from "@x402/core/server";
 
 // --- IMPORTAR LOS SERVICIOS ---
 import serviciosRoutes from './servicios.mjs';
@@ -99,7 +102,7 @@ app.get('/api/receipt/:intentId', async (req, res) => {
   try {
     const receipt = await client.readContract({ address: CONTRACT, abi: ABI_GET_RECEIPT, functionName: 'getReceipt', args: [BigInt(req.params.intentId)] });
     res.json({ intentId: req.params.intentId, agent: receipt[0], erc8004AgentId: receipt[1].toString(), intentHash: receipt[2], conditionHash: receipt[3], mandateId: receipt[4], maxAmount: receipt[5].toString(), paymentNonce: receipt[6], resultHash: receipt[7], timestamp: receipt[8].toString(), settled: receipt[9], inconsistent: receipt[10] });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error("ERROR REAL:", e); res.status(500).json({ error: e.message }); }
 });
 
 app.get('/api/nfts/:address', async (req, res) => {
@@ -128,7 +131,7 @@ app.get('/api/nfts/:address', async (req, res) => {
     else if (totalNFTs >= 11) { tier = 'Plata'; tierIcon = '🥈'; }
     else if (totalNFTs >= 1) { tier = 'Bronce'; tierIcon = '🥉'; }
     res.json({ address, total: totalNFTs, totalVolume: totalVolume.toFixed(4), inconsistent: inconsistentCount, score, tier, tierIcon, nfts });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error("ERROR REAL:", e); res.status(500).json({ error: e.message }); }
 });
 
 app.get('/api/services', async (req, res) => {
@@ -140,7 +143,7 @@ app.get('/api/services', async (req, res) => {
       services.push({ serviceId: i.toString(), provider: s.provider, name: s.name, description: s.description, price: s.price.toString(), endpoint: s.endpoint, active: s.active, reputationRequired: s.reputationRequired.toString() });
     }
     res.json({ services });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error("ERROR REAL:", e); res.status(500).json({ error: e.message }); }
 });
 
 app.get('/catalog', async (req, res) => {
@@ -152,7 +155,7 @@ app.get('/catalog', async (req, res) => {
       if (s.active) services.push({ id: i.toString(), provider: s.provider, name: s.name, description: s.description, price: (Number(s.price) / 1e18).toFixed(4) + ' MON', endpoint: s.endpoint, reputation_required: s.reputationRequired.toString(), network: "monad-mainnet", chain_id: 143, contract: SERVICE_DIRECTORY_ADDRESS });
     }
     res.json({ name: "AgentYarbox Mall", description: "Centro comercial de agentes autónomos en Monad", services: services });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { console.error("ERROR REAL:", e); res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/buy', async (req, res) => {
@@ -209,6 +212,89 @@ app.post('/register-service', async (req, res) => {
     await tx.wait();
     res.json({ ok: true, tx: tx.hash });
   } catch (e) { res.status(500).json({ error: e.message.slice(0, 200) }); }
+});
+
+// --- CONFIGURACIÓN X402 (Monad Mainnet) ---
+const facilitatorClient = new HTTPFacilitatorClient({
+  url: "https://x402-facilitator.molandak.org"
+});
+
+const resourceServer = new x402ResourceServer(facilitatorClient)
+  .register("eip155:143", new ExactEvmScheme());
+
+app.use(
+  paymentMiddleware(
+    {
+      "GET /api/premium-data": {
+        accepts: {
+          scheme: "exact",
+          price: "$0.01",
+          network: "eip155:143",
+          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
+        },
+        description: "Acceso a datos premium de AgentYarbox",
+      },
+      "GET /api/buy/:serviceId": {
+        accepts: {
+          scheme: "exact",
+          network: "eip155:143",
+          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
+          price: async (context) => {
+            const serviceId = context.adapter.getPath().split('/').pop();
+            const s = await client.readContract({
+              address: SERVICE_DIRECTORY_ADDRESS,
+              abi: SERVICE_DIRECTORY_ABI,
+              functionName: "getService",
+              args: [BigInt(serviceId)]
+            });
+            const precioMON = Number(s.price) / 1e18;
+            const precioUSDC = precioMON * 0.02;
+            return `$${precioUSDC.toFixed(6)}`;
+          },
+        },
+        description: "Servicio del Agent Mall",
+      },
+    },
+    resourceServer
+  )
+);
+// --- RUTA DE COMPRA CON X402 PARA SERVICIOS REALES ---
+app.get('/api/buy/:serviceId', async (req, res) => {
+  try {
+    const serviceId = parseInt(req.params.serviceId);
+
+    const s = await client.readContract({
+      address: SERVICE_DIRECTORY_ADDRESS,
+      abi: SERVICE_DIRECTORY_ABI,
+      functionName: 'getService',
+      args: [BigInt(serviceId)]
+    });
+
+    if (!s.active) {
+      return res.status(404).json({ error: "Servicio no disponible" });
+    }
+
+    // El middleware x402 ya verificó y liquidó el pago -> entregamos el servicio
+    res.json({
+      ok: true,
+      service: {
+        id: serviceId,
+        provider: s.provider,
+        name: s.name,
+        description: s.description,
+        priceMON: (Number(s.price) / 1e18).toFixed(6),
+        endpoint: s.endpoint,
+        reputationRequired: s.reputationRequired.toString(),
+        network: "monad-mainnet",
+        chainId: 143,
+        contract: SERVICE_DIRECTORY_ADDRESS,
+      },
+      paidAt: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.error("ERROR REAL:", e);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.listen(PORT, "0.0.0.0", () => {

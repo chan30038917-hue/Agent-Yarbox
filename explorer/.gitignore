@@ -1,0 +1,7 @@
+test-buy.mjs
+test-buy.mjs
+*.bak*
+.env
+wallet-key.txt
+*.key
+*.pem

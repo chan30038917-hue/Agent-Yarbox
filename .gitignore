@@ -5,3 +5,9 @@ node_modules/
 *.log
 broadcast/
 explorer/data/
+wallet-key.txt
+*.key
+*.pem
+*.bak
+*.bak2
+*.bak3
