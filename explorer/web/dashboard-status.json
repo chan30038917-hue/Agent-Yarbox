@@ -1,7 +1,7 @@
 {
-  "timestamp": 1793581808764,
+  "timestamp": 1793761640355,
   "capasTotales": 3,
-  "capaActual": 1,
+  "capaActual": 2,
   "agenteActual": null,
   "capas": [
     {
@@ -34,7 +34,7 @@
         "agente-09",
         "agente-10"
       ],
-      "estado": "en_progreso"
+      "estado": "completada"
     },
     {
       "numero": 3,
@@ -50,10 +50,50 @@
         "agente-09",
         "agente-10"
       ],
-      "estado": "pendiente"
+      "estado": "en_progreso"
     }
   ],
   "resultados": [
+    {
+      "ok": true,
+      "agente": "agente-01"
+    },
+    {
+      "ok": true,
+      "agente": "agente-02"
+    },
+    {
+      "ok": true,
+      "agente": "agente-03"
+    },
+    {
+      "ok": true,
+      "agente": "agente-04"
+    },
+    {
+      "ok": true,
+      "agente": "agente-05"
+    },
+    {
+      "ok": true,
+      "agente": "agente-06"
+    },
+    {
+      "ok": true,
+      "agente": "agente-07"
+    },
+    {
+      "ok": true,
+      "agente": "agente-08"
+    },
+    {
+      "ok": true,
+      "agente": "agente-09"
+    },
+    {
+      "ok": true,
+      "agente": "agente-10"
+    },
     {
       "ok": true,
       "agente": "agente-01"
