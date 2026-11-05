@@ -100,9 +100,16 @@ app.get('/api/stats', async (req, res) => {
 
 app.get('/api/receipt/:intentId', async (req, res) => {
   try {
-    const receipt = await client.readContract({ address: CONTRACT, abi: ABI_GET_RECEIPT, functionName: 'getReceipt', args: [BigInt(req.params.intentId)] });
-    res.json({ intentId: req.params.intentId, agent: receipt[0], erc8004AgentId: receipt[1].toString(), intentHash: receipt[2], conditionHash: receipt[3], mandateId: receipt[4], maxAmount: receipt[5].toString(), paymentNonce: receipt[6], resultHash: receipt[7], timestamp: receipt[8].toString(), settled: receipt[9], inconsistent: receipt[10] });
-  } catch (e) { console.error("ERROR REAL:", e); res.status(500).json({ error: e.message }); }
+    const raw = req.params.intentId;
+    if (!/^[0-9]+$/.test(raw)) {
+      return res.status(400).json({ error: "intentId debe ser un numero entero" });
+    }
+    const receipt = await client.readContract({ address: CONTRACT, abi: ABI_GET_RECEIPT, functionName: 'getReceipt', args: [BigInt(raw)] });
+    res.json({ intentId: raw, agent: receipt[0], erc8004AgentId: receipt[1].toString(), intentHash: receipt[2], conditionHash: receipt[3], mandateId: receipt[4], maxAmount: receipt[5].toString(), paymentNonce: receipt[6], resultHash: receipt[7], timestamp: receipt[8].toString(), settled: receipt[9], inconsistent: receipt[10] });
+  } catch (e) {
+    console.error("ERROR REAL:", e);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.get('/api/nfts/:address', async (req, res) => {
