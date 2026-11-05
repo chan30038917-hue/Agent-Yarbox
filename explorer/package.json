@@ -10,6 +10,11 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@x402/core": "^2.30.0",
+    "@x402/evm": "^2.30.0",
+    "@x402/express": "^2.30.0",
+    "@x402/fetch": "^2.30.0",
+    "argus-x402-sdk": "^0.2.0",
     "axios": "^1.21.0",
     "better-sqlite3": "^12.11.1",
     "cheerio": "^1.2.0",
@@ -19,6 +24,7 @@
     "iron-session": "^8.0.4",
     "openai": "^6.49.0",
     "siwe": "^3.0.0",
-    "viem": "^2.57.13"
+    "viem": "^2.57.13",
+    "x402-express": "^1.2.0"
   }
 }
