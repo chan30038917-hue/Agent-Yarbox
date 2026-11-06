@@ -13,7 +13,6 @@ import { readFileSync, existsSync } from 'fs';
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
-import { facilitator } from "@coinbase/x402";
 
 // --- IMPORTAR LOS SERVICIOS ---
 import serviciosRoutes from './servicios.mjs';
@@ -296,143 +295,79 @@ const facilitatorClient = new HTTPFacilitatorClient({
 });
 
 const resourceServer = new x402ResourceServer(facilitatorClient)
-  .register("eip155:143", new ExactEvmScheme())
-  .register("eip155:8453", new ExactEvmScheme());
+  .register("eip155:143", new ExactEvmScheme());
 
 app.use(
   paymentMiddleware(
     {
             "GET /api/validar-wallet": {
-        accepts: [
-          {
-            scheme: "exact",
-            price: "$0.002",
-            network: "eip155:143",
-            payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
-            extra: { name: "USDC", version: "2" }
-          },
-          {
-            scheme: "exact",
-            price: "$0.002",
-            network: "eip155:8453",
-            payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
-            extra: { name: "USD Coin", version: "2" }
-          }
-        ],
+        accepts: {
+          scheme: "exact",
+          price: "$0.002",
+          network: "eip155:143",
+          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
+          extra: { name: "USDC", version: "2" },
+        },
         description: "Valida la reputacion de una wallet",
       },
       "GET /api/riesgo-token": {
-        accepts: [
-          {
-            scheme: "exact",
-            price: "$0.002",
-            network: "eip155:143",
-            payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
-            extra: { name: "USDC", version: "2" }
-          },
-          {
-            scheme: "exact",
-            price: "$0.002",
-            network: "eip155:8453",
-            payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
-            extra: { name: "USD Coin", version: "2" }
-          }
-        ],
+        accepts: {
+          scheme: "exact",
+          price: "$0.002",
+          network: "eip155:143",
+          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
+          extra: { name: "USDC", version: "2" },
+        },
         description: "Analiza si un token es seguro o una estafa",
       },
             "GET /api/clima": {
-        accepts: [
-          {
-            scheme: "exact",
-            price: "$0.001",
-            network: "eip155:143",
-            payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
-            extra: { name: "USDC", version: "2" }
-          },
-          {
-            scheme: "exact",
-            price: "$0.001",
-            network: "eip155:8453",
-            payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
-            extra: { name: "USD Coin", version: "2" }
-          }
-        ],
+        accepts: {
+          scheme: "exact",
+          price: "$0.001",
+          network: "eip155:143",
+          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
+          extra: { name: "USDC", version: "2" },
+        },
         description: "Datos del clima en tiempo real",
       },
       "GET /api/premium-data": {
-        accepts: [
-          {
-            scheme: "exact",
-            price: "$0.001",
-            network: "eip155:143",
-            payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
-            extra: { name: "USDC", version: "2" }
-          },
-          {
-            scheme: "exact",
-            price: "$0.001",
-            network: "eip155:8453",
-            payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
-            extra: { name: "USD Coin", version: "2" }
-          }
-        ],
+        accepts: {
+          scheme: "exact",
+          price: "$0.001",
+          network: "eip155:143",
+          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
+          extra: { name: "USDC", version: "2" },
+        },
         description: "Acceso a datos premium de AgentYarbox",
       },
             "GET /api/buscar-web": {
-        accepts: [
-          {
-            scheme: "exact",
-            price: "$0.005",
-            network: "eip155:143",
-            payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
-            extra: { name: "USDC", version: "2" }
-          },
-          {
-            scheme: "exact",
-            price: "$0.005",
-            network: "eip155:8453",
-            payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
-            extra: { name: "USD Coin", version: "2" }
-          }
-        ],
+        accepts: {
+          scheme: "exact",
+          price: "$0.005",
+          network: "eip155:143",
+          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
+          extra: { name: "USDC", version: "2" },
+        },
         description: "Busqueda web en Google para agentes (Serper)",
       },
             "GET /api/auditar-token": {
-        accepts: [
-          {
-            scheme: "exact",
-            price: "$0.01",
-            network: "eip155:143",
-            payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
-            extra: { name: "USDC", version: "2" }
-          },
-          {
-            scheme: "exact",
-            price: "$0.01",
-            network: "eip155:8453",
-            payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
-            extra: { name: "USD Coin", version: "2" }
-          }
-        ],
+        accepts: {
+          scheme: "exact",
+          price: "$0.01",
+          network: "eip155:143",
+          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
+          extra: { name: "USDC", version: "2" },
+        },
         description: "Auditoria de seguridad de token en Monad (GoPlus + IA)",
       },
             "GET /api/gas-monad": {
-        accepts: [
-          {
-            scheme: "exact",
-            price: "$0.002",
-            network: "eip155:143",
-            payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
-            extra: { name: "USDC", version: "2" }
-          },
-          {
-            scheme: "exact",
-            price: "$0.002",
-            network: "eip155:8453",
-            payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
-            extra: { name: "USD Coin", version: "2" }
-          }
-        ],
+        accepts: {
+          scheme: "exact",
+          price: "$0.002",
+          network: "eip155:143",
+          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
+          extra: { name: "USDC", version: "2" },
+        },
         description: "Gas tracker y recomendacion de timing para Monad",
       },
       "GET /api/buy/:serviceId": {
