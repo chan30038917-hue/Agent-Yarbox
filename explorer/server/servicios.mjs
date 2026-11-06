@@ -52,7 +52,7 @@ router.get('/precio-mon', cobrar("500", "0x754704Bc059F8C67012fEd69BC8A327a5aafb
 
 
 // 3. El Detective (Validación de Wallet)
-router.get('/validar-wallet/:address', cobrar("50000", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
+router.get('/validar-wallet/:address', cobrar("2000", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
   try {
     const address = req.params.address;
     const REPUTATION_NFT = '0xDE2153656df0dd9b370bc9796A5dd04Ad24BF4f8';
