@@ -313,6 +313,15 @@ app.use(
         },
         description: "Busqueda web en Google para agentes (Serper)",
       },
+            "GET /api/auditar-token": {
+        accepts: {
+          scheme: "exact",
+          price: "$0.01",
+          network: "eip155:143",
+          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
+        },
+        description: "Auditoria de seguridad de token en Monad (GoPlus + IA)",
+      },
       "GET /api/buy/:serviceId": {
         accepts: {
           scheme: "exact",
@@ -532,6 +541,63 @@ app.get('/api/buscar-web', async (req, res) => {
     });
   } catch (e) {
     console.error("ERROR buscar-web:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
+// Ruta de Auditoría de Token (GoPlus + OpenAI)
+app.get('/api/auditar-token', async (req, res) => {
+  try {
+    const { address } = req.query;
+    if (!address) return res.status(400).json({ error: "Falta el parámetro 'address'" });
+
+    // 1. Consultar GoPlus para Monad (chainId 143)
+    const goplusUrl = `https://api.gopluslabs.io/api/v1/token_security/143?contract_addresses=${address}`;
+    const goplusRes = await fetch(goplusUrl);
+    if (!goplusRes.ok) {
+      return res.status(500).json({ error: "Error consultando GoPlus" });
+    }
+    const goplusData = await goplusRes.json();
+    const tokenData = goplusData.result?.[address.toLowerCase()];
+
+    if (!tokenData) {
+      return res.status(404).json({ error: "Token no encontrado en GoPlus (puede no estar en Monad o no ser un contrato)" });
+    }
+
+    // 2. Extraer señales clave
+    const señales = {
+      honeypot: tokenData.is_honeypot === "1",
+      mintable: tokenData.is_mintable === "1",
+      proxy: tokenData.is_proxy === "1",
+      open_source: tokenData.is_open_source === "1",
+      buy_tax: tokenData.buy_tax || "0",
+      sell_tax: tokenData.sell_tax || "0",
+      holder_count: tokenData.holder_count || "0",
+      lp_holders: tokenData.lp_holders?.length || 0,
+      owner_address: tokenData.owner_address || null,
+    };
+
+    // 3. Generar veredicto con OpenAI
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{
+        role: "user",
+        content: `Analiza estos datos de seguridad de un token en Monad y devuelve un veredicto en JSON con: "riesgo" (bajo/medio/alto), "resumen" (1-2 frases), y "recomendacion" (1 frase). Datos: ${JSON.stringify(señales)}`
+      }],
+      response_format: { type: "json_object" }
+    });
+
+    const veredicto = JSON.parse(completion.choices[0].message.content);
+
+    res.json({
+      ok: true,
+      address,
+      señales,
+      veredicto
+    });
+  } catch (e) {
+    console.error("ERROR auditar-token:", e);
     res.status(500).json({ error: e.message });
   }
 });
