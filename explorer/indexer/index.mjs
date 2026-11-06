@@ -3,7 +3,7 @@ import db from './db.mjs';
 
 const RPC_URL = 'https://rpc.monad.xyz';
 const CONTRACT_ADDRESS = '0x4D0D993e6FF19279dF0E69d9cd9cC946480973dC';
-const START_BLOCK = 117502959n;
+const START_BLOCK = 119200000n;  // Cerca de los eventos recientes
 const BLOCK_CHUNK = 100n;
 
 const client = createPublicClient({ transport: http(RPC_URL) });
