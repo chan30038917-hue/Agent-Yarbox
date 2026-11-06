@@ -217,7 +217,7 @@ app.post('/api/buy', async (req, res) => {
     await new Promise(r => setTimeout(r, 5000));
     
     const intentId = Number(totalBefore);
-    const payment = await sdk.pay({ mandateId: agente.mandateId, passkey: agente.passkey, amount: (Number(servicio.price) / 1e18).toString(), recipient: '0xF6805F61820A860db4B7462Bc9940793fC8ed22A', gasLimit: 500000 });
+    const payment = await sdk.pay({ mandateId: agente.mandateId, passkey: agente.passkey, amount: (Number(servicio.price) / 1e18).toString(), recipient: '0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3', gasLimit: 500000 });
     await new Promise(r => setTimeout(r, 5000));
     
     const txSettle = await yarbox.settleIntent({ intentId, paymentNonce: payment.paymentNonce, resultHash: keccak256(toUtf8Bytes('result-' + payment.tx)) });
