@@ -271,7 +271,7 @@ app.use(
             "GET /api/validar-wallet": {
         accepts: {
           scheme: "exact",
-          price: "$0.01",
+          price: "$0.002",
           network: "eip155:143",
           payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
         },
@@ -280,7 +280,7 @@ app.use(
       "GET /api/riesgo-token": {
         accepts: {
           scheme: "exact",
-          price: "$0.005",
+          price: "$0.002",
           network: "eip155:143",
           payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
         },
@@ -289,7 +289,7 @@ app.use(
             "GET /api/clima": {
         accepts: {
           scheme: "exact",
-          price: "$0.01",
+          price: "$0.001",
           network: "eip155:143",
           payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
         },
@@ -298,7 +298,7 @@ app.use(
       "GET /api/premium-data": {
         accepts: {
           scheme: "exact",
-          price: "$0.01",
+          price: "$0.001",
           network: "eip155:143",
           payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
         },
@@ -489,3 +489,4 @@ try {
 app.listen(serverPort, "0.0.0.0", () => {
   console.log(`Servidor AgentYarbox listo y escuchando en el puerto ${serverPort}`);
 });
+// rebuild Thu Nov  5 23:33:42 CST 2026
