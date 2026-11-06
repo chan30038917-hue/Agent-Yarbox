@@ -329,6 +329,7 @@ app.get('/api/buy/:serviceId', async (req, res) => {
   }
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`API corriendo en el puerto ${PORT}`);
+const serverPort = process.env.PORT || 3001;
+app.listen(serverPort, "0.0.0.0", () => {
+  console.log(`Servidor AgentYarbox listo y escuchando en el puerto ${serverPort}`);
 });
