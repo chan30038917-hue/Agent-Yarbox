@@ -18,6 +18,7 @@ const INTENT_INCONSISTENT = parseAbiItem(
   'event IntentInconsistent(uint256 indexed id, string reason)'
 );
 
+const existeEvento = db.prepare('SELECT id FROM events WHERE transactionHash = ? AND eventName = ?');
 const insertEvent = db.prepare(`
   INSERT OR IGNORE INTO events (
     eventName, intentId, agent, mandateId, maxAmount,
@@ -50,7 +51,7 @@ for (let from = lastBlock; from <= currentBlock; from += BLOCK_CHUNK) {
   ]);
 
   for (const log of committedLogs) {
-    insertEvent.run({
+    if (!existeEvento.get(log.transactionHash, 'IntentCommitted')) insertEvent.run({
       eventName: 'IntentCommitted',
       intentId: log.args.id.toString(),
       agent: log.args.agent,
@@ -68,7 +69,7 @@ for (let from = lastBlock; from <= currentBlock; from += BLOCK_CHUNK) {
   }
 
   for (const log of settledLogs) {
-    insertEvent.run({
+    if (!existeEvento.get(log.transactionHash, 'IntentSettled')) insertEvent.run({
       eventName: 'IntentSettled',
       intentId: log.args.id.toString(),
       agent: null,
@@ -86,7 +87,7 @@ for (let from = lastBlock; from <= currentBlock; from += BLOCK_CHUNK) {
   }
 
   for (const log of inconsistentLogs) {
-    insertEvent.run({
+    if (!existeEvento.get(log.transactionHash, 'IntentInconsistent')) insertEvent.run({
       eventName: 'IntentInconsistent',
       intentId: log.args.id.toString(),
       agent: null,
