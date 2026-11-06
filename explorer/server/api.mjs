@@ -291,11 +291,16 @@ app.post('/register-service', async (req, res) => {
 
 // --- CONFIGURACIÓN X402 (Monad Mainnet) ---
 const facilitatorClient = new HTTPFacilitatorClient({
-  url: "https://x402-facilitator.molandak.org"
+  url: "https://api.cdp.coinbase.com/platform/v2/x402",
+  headers: {
+    "X-CDP-API-Key-ID": process.env.CDP_API_KEY_ID,
+    "X-CDP-API-Key-Secret": process.env.CDP_API_KEY_SECRET
+  }
 });
 
 const resourceServer = new x402ResourceServer(facilitatorClient)
-  .register("eip155:143", new ExactEvmScheme());
+  .register("eip155:143", new ExactEvmScheme())
+  .register("eip155:8453", new ExactEvmScheme());
 
 app.use(
   paymentMiddleware(
