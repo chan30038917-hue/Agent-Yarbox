@@ -34,6 +34,9 @@ db.exec(`
   )
 `);
 
+// Índice único para evitar duplicados (mismo evento + misma tx)
+db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_events_unique ON events(transactionHash, eventName)`);
+
 // Añadir tenant_id si no existe
 try {
   db.exec(`ALTER TABLE events ADD COLUMN tenant_id TEXT`);
