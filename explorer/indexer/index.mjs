@@ -34,6 +34,12 @@ const updateCheckpoint = db.prepare('UPDATE checkpoint SET lastBlock = ? WHERE i
 const getCheckpoint = db.prepare('SELECT lastBlock FROM checkpoint WHERE id = 1');
 
 let lastBlock = BigInt(getCheckpoint.get().lastBlock);
+// Si el checkpoint es menor que START_BLOCK, forzar START_BLOCK
+if (lastBlock < START_BLOCK) {
+  console.log('Checkpoint antiguo detectado (' + lastBlock + '), forzando START_BLOCK: ' + START_BLOCK);
+  lastBlock = START_BLOCK;
+  updateCheckpoint.run(Number(START_BLOCK));
+}
 const currentBlock = await client.getBlockNumber();
 console.log(`Indexando desde bloque ${lastBlock} hasta ${currentBlock}`);
 
