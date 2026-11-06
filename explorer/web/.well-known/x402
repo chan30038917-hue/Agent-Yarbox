@@ -1,0 +1,55 @@
+{
+  "x402Version": 2,
+  "name": "AgentYarboxMallOficial",
+  "description": "Agent Mall con servicios de pago por uso (x402) en Monad. Ofrece APIs de clima, análisis IA, seguridad de tokens y más.",
+  "network": "eip155:143",
+  "asset": "0x754704Bc059F8C67012fEd69BC8A327a5aafb603",
+  "payTo": "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
+  "services": [
+    {
+      "name": "Precio MON",
+      "endpoint": "/api/precio-mon",
+      "price": "0.0005"
+    },
+    {
+      "name": "Sentimiento Mercado",
+      "endpoint": "/api/sentimiento-mercado",
+      "price": "0.001"
+    },
+    {
+      "name": "Mejor Momento",
+      "endpoint": "/api/mejor-momento",
+      "price": "0.0005"
+    },
+    {
+      "name": "Análisis IA",
+      "endpoint": "/api/analizar-texto",
+      "price": "0.002"
+    },
+    {
+      "name": "Lector Web IA",
+      "endpoint": "/api/leer-web",
+      "price": "0.001"
+    },
+    {
+      "name": "Extractor de JSON",
+      "endpoint": "/api/extraer-json",
+      "price": "0.002"
+    },
+    {
+      "name": "Detective Wallet",
+      "endpoint": "/api/validar-wallet",
+      "price": "0.002"
+    },
+    {
+      "name": "Detective de Seguridad",
+      "endpoint": "/api/riesgo-token",
+      "price": "0.002"
+    },
+    {
+      "name": "Clima",
+      "endpoint": "/api/clima",
+      "price": "0.001"
+    }
+  ]
+}
