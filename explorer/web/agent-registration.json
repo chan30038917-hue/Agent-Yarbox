@@ -1,0 +1,26 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "AgentYarboxMallOficial",
+  "description": "Agent Mall con servicios de pago por uso (x402) en Monad. Ofrece APIs de clima, análisis IA, seguridad de tokens y más.",
+  "image": "https://tu-web.com/icono.png",
+  "services": [
+    {
+      "name": "web",
+      "endpoint": "https://vigilant-nourishment-production.up.railway.app/"
+    },
+    {
+      "name": "x402",
+      "endpoint": "https://vigilant-nourishment-production.up.railway.app/api/buy/1",
+      "description": "Endpoint de pago x402 para adquirir servicios. Sustituye el ID del servicio en la URL."
+    }
+  ],
+  "x402Support": true,
+  "active": true,
+  "registrations": [
+    {
+      "agentId": 10422,
+      "agentRegistry": "eip155:143:0x8004a169fb4a3325136eb29fa0ceb6d2e539a432"
+    }
+  ],
+  "supportedTrust": ["reputation"]
+}
