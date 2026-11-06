@@ -8,7 +8,7 @@ const cobrar = (precio, moneda) => (req, res, next) => {
       x402Version: 2,
       accepts: [{
         scheme: "exact", network: "eip155:143", amount: precio, asset: moneda,
-        payTo: "0xF6805F61820A860db4B7462Bc9940793fC8ed22A", maxTimeoutSeconds: 300
+        payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3", maxTimeoutSeconds: 300
       }]
     };
     return res.status(402).set('PAYMENT-REQUIRED', Buffer.from(JSON.stringify(paymentRequired)).toString('base64')).json({ error: "Payment Required" });
