@@ -155,6 +155,15 @@ app.get('/api/nfts/:address', async (req, res) => {
 });
 
 app.get('/api/services', async (req, res) => {
+  // Parche: sustituir el endpoint falso del clima por el real
+  const _originalReadContract = client.readContract.bind(client);
+  client.readContract = async (args) => {
+    const result = await _originalReadContract(args);
+    if (args.functionName === 'getService' && result && result.endpoint === 'https://api.clima.com') {
+      return { ...result, endpoint: '/api/clima' };
+    }
+    return result;
+  };
   try {
     const count = await client.readContract({ address: SERVICE_DIRECTORY_ADDRESS, abi: SERVICE_DIRECTORY_ABI, functionName: 'getServicesCount' });
     const services = [];
