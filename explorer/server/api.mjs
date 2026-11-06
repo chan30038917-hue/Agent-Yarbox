@@ -304,6 +304,15 @@ app.use(
         },
         description: "Acceso a datos premium de AgentYarbox",
       },
+            "GET /api/buscar-web": {
+        accepts: {
+          scheme: "exact",
+          price: "$0.005",
+          network: "eip155:143",
+          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
+        },
+        description: "Busqueda web en Google para agentes (Serper)",
+      },
       "GET /api/buy/:serviceId": {
         accepts: {
           scheme: "exact",
