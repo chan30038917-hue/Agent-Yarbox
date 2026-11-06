@@ -22,7 +22,7 @@ import { createPublicClient, http, parseAbi } from 'viem';
 const client = createPublicClient({ transport: http('https://rpc3.monad.xyz') });
 const POOL_ADDRESS = '0x18a9fc874581f3ba12b7898f80a683c66fd5877fd74b26a85ba9a3a79c549954';
 
-router.get('/precio-mon', cobrar("10000", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
+router.get('/precio-mon', cobrar("500", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
   try {
     // Usamos la API de GeckoTerminal (que indexa MonadScan) para obtener el precio real
     const poolAddress = '0x8b926a72640b5766c5daa65365c24009618a91cab560946b550e4aa5ce2ae5f2';
@@ -88,7 +88,7 @@ router.get('/validar-wallet/:address', cobrar("50000", "0x754704Bc059F8C67012fEd
 });
 
 // 4. Chisme del Mercado (Sentimiento)
-router.get('/sentimiento-mercado', cobrar("15000", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
+router.get('/sentimiento-mercado', cobrar("1000", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
   try {
     // Usamos la API de CoinGecko para obtener el Fear & Greed Index real
     const response = await fetch('https://api.alternative.me/fng/');
@@ -116,7 +116,7 @@ router.get('/sentimiento-mercado', cobrar("15000", "0x754704Bc059F8C67012fEd69BC
 });
 
 // 5. Relojero (Gas y Tiempo)
-router.get('/mejor-momento', cobrar("5000", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
+router.get('/mejor-momento', cobrar("500", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
   try {
     // Usamos el RPC de Monad para obtener el gas price real
     const response = await fetch('https://rpc3.monad.xyz', {
