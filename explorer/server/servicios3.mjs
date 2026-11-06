@@ -19,7 +19,7 @@ const cobrar = (precio, moneda) => (req, res, next) => {
   next();
 };
 
-router.post('/analizar-texto', cobrar("20000", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
+router.post('/analizar-texto', cobrar("2000", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
   try {
     const { texto } = req.body;
     if (!texto) return res.status(400).json({ success: false, error: "Falta el texto a analizar" });
@@ -40,7 +40,7 @@ router.post('/analizar-texto', cobrar("20000", "0x754704Bc059F8C67012fEd69BC8A32
   }
 });
 
-router.post('/extraer-json', cobrar("15000", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
+router.post('/extraer-json', cobrar("2000", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
   try {
     const { texto } = req.body;
     if (!texto) return res.status(400).json({ success: false, error: "Falta el texto para extraer datos" });

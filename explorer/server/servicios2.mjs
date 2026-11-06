@@ -20,7 +20,7 @@ const cobrar = (precio, moneda) => (req, res, next) => {
 };
 
 // 1. Lector de Páginas Web (REAL con cheerio)
-router.post('/leer-web', cobrar("5000", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
+router.post('/leer-web', cobrar("1000", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
   try {
     const { url } = req.body;
     if (!url) return res.status(400).json({ success: false, error: "Falta la URL" });
@@ -41,7 +41,7 @@ router.post('/leer-web', cobrar("5000", "0x754704Bc059F8C67012fEd69BC8A327a5aafb
 });
 
 // 2. Detective de Seguridad (REAL con GeckoTerminal)
-router.get('/riesgo-token/:address', cobrar("10000", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
+router.get('/riesgo-token/:address', cobrar("2000", "0x754704Bc059F8C67012fEd69BC8A327a5aafb603"), async (req, res) => {
   try {
     const tokenAddress = req.params.address;
     const url = `https://api.geckoterminal.com/api/v2/networks/monad/tokens/${tokenAddress}`;
