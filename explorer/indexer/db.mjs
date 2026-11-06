@@ -34,11 +34,7 @@ db.exec(`
   )
 `);
 
-// 1. Borrar duplicados existentes (quedarse con el de menor id)
-db.exec(`DELETE FROM events WHERE id NOT IN (SELECT MIN(id) FROM events GROUP BY transactionHash, eventName)`);
 
-// 2. Crear el índice único (ahora sí funcionará)
-db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_events_unique ON events(transactionHash, eventName)`);
 
 // Añadir tenant_id si no existe
 try {
