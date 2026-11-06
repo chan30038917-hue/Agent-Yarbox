@@ -7,7 +7,7 @@ import { createPublicClient, http } from 'viem';
 import { SiweMessage } from 'siwe';
 import { getIronSession } from 'iron-session';
 import crypto from 'crypto';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
@@ -21,10 +21,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 const SESSION_OPTIONS = {
-  password: crypto.randomBytes(32).toString('hex'),
+  password: process.env.SESSION_PASSWORD || crypto.randomBytes(32).toString('hex'),
   cookieName: 'agent-yarbox-session',
   cookieOptions: { secure: false, httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 },
 };
@@ -44,10 +44,21 @@ const NFT_ADDRESS = '0xDE2153656df0dd9b370bc9796A5dd04Ad24BF4f8';
 const SERVICE_DIRECTORY_ADDRESS = '0xCD9DdC0A0abB73a65F0AbF02Ec940F30661ca2AB';
 
 const ABI_GET_RECEIPT = [{ name: 'getReceipt', type: 'function', stateMutability: 'view', inputs: [{ name: '_id', type: 'uint256' }], outputs: [{ name: 'agent', type: 'address' }, { name: 'erc8004AgentId', type: 'uint64' }, { name: 'intentHash', type: 'bytes32' }, { name: 'conditionHash', type: 'bytes32' }, { name: 'mandateId', type: 'bytes32' }, { name: 'maxAmount', type: 'uint256' }, { name: 'paymentNonce', type: 'bytes32' }, { name: 'resultHash', type: 'bytes32' }, { name: 'timestamp', type: 'uint256' }, { name: 'settled', type: 'bool' }, { name: 'inconsistent', type: 'bool' }] }];
-
 const NFT_ABI = [{ "inputs": [{ "internalType": "address", "name": "owner", "type": "address" }], "name": "balanceOf", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "name": "receipts", "outputs": [{ "internalType": "uint256", "name": "intentId", "type": "uint256" }, { "internalType": "address", "name": "agent", "type": "address" }, { "internalType": "uint256", "name": "maxAmount", "type": "uint256" }, { "internalType": "bytes32", "name": "paymentNonce", "type": "bytes32" }, { "internalType": "uint256", "name": "timestamp", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "nextTokenId", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }];
-
 const SERVICE_DIRECTORY_ABI = [{ "inputs": [{ "internalType": "uint256", "name": "_serviceId", "type": "uint256" }], "name": "getService", "outputs": [{ "components": [{ "internalType": "address", "name": "provider", "type": "address" }, { "internalType": "string", "name": "name", "type": "string" }, { "internalType": "string", "name": "description", "type": "string" }, { "internalType": "uint256", "name": "price", "type": "uint256" }, { "internalType": "string", "name": "endpoint", "type": "string" }, { "internalType": "bool", "name": "active", "type": "bool" }, { "internalType": "uint256", "name": "reputationRequired", "type": "uint256" }], "internalType": "struct ServiceDirectory.Service", "name": "", "type": "tuple" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "getServicesCount", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "address", "name": "_agent", "type": "address" }, { "internalType": "uint256", "name": "_serviceId", "type": "uint256" }], "name": "canPurchase", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "view", "type": "function" }];
+
+// Helper para leer mandatos sin romper por rutas absolutas
+function obtenerMandatos() {
+  const rutaLocal = join(__dirname, 'mandatos-agentes.json');
+  if (existsSync(rutaLocal)) {
+    return JSON.parse(readFileSync(rutaLocal, 'utf8'));
+  }
+  const rutaAbsoluta = '/home/usuariochan/aethel-autapon/integration/mandatos-agentes.json';
+  if (existsSync(rutaAbsoluta)) {
+    return JSON.parse(readFileSync(rutaAbsoluta, 'utf8'));
+  }
+  throw new Error('Archivo mandatos-agentes.json no encontrado');
+}
 
 async function getSession(req, res) { return await getIronSession(req, res, SESSION_OPTIONS); }
 
@@ -169,18 +180,22 @@ app.post('/api/buy', async (req, res) => {
   try {
     const { serviceId, agentId } = req.body;
     if (!serviceId || !agentId) return res.status(400).json({ error: 'Faltan serviceId o agentId' });
-    const mandatos = JSON.parse(readFileSync('/home/usuariochan/aethel-autapon/integration/mandatos-agentes.json', 'utf8'));
+    
+    const mandatos = obtenerMandatos();
     const agente = mandatos.find(m => m.agentId === agentId);
     if (!agente) return res.status(404).json({ error: 'Agente no encontrado' });
+    
     const servicio = await client.readContract({ address: SERVICE_DIRECTORY_ADDRESS, abi: SERVICE_DIRECTORY_ABI, functionName: 'getService', args: [BigInt(serviceId)] });
     if (!servicio.active) return res.status(400).json({ error: 'Servicio cerrado' });
+
     const puedeComprar = await client.readContract({ address: SERVICE_DIRECTORY_ADDRESS, abi: SERVICE_DIRECTORY_ABI, functionName: 'canPurchase', args: [agente.address, BigInt(serviceId)] });
-    if (!puedeComprar) return res.status(403).json({ error: 'Reputación insuficiente' });
+    if (!puedeComprar && Number(servicio.reputationRequired) > 0) {
+      return res.status(403).json({ error: 'Reputación insuficiente' });
+    }
     
     const { MandateSDK } = await import('@chan30/mandate-sdk');
     const { AgentYarbox } = await import('../../index.js');
-    const { Wallet, parseEther, keccak256, toUtf8Bytes, Contract } = await import('ethers');
-    const { JsonRpcProvider } = await import('ethers');
+    const { Wallet, keccak256, toUtf8Bytes, Contract, JsonRpcProvider } = await import('ethers');
 
     const provider = new JsonRpcProvider('https://rpc3.monad.xyz', 143);
     const sdk = new MandateSDK({ privateKey: agente.privateKey, rpcUrl: 'https://rpc3.monad.xyz', chainId: 143 });
@@ -189,16 +204,24 @@ app.post('/api/buy', async (req, res) => {
     const totalBefore = await client.readContract({ address: '0x4D0D993e6FF19279dF0E69d9cd9cC946480973dC', abi: [{ "inputs": [], "name": "totalIntents", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }], functionName: 'totalIntents' });
     const txCommit = await yarbox.commitIntent({ intentHash: keccak256(toUtf8Bytes('buy-' + Date.now())), conditionHash: keccak256(toUtf8Bytes('service-' + serviceId)), mandateId: agente.mandateId, maxAmount: servicio.price, erc8004AgentId: 0n });
     await new Promise(r => setTimeout(r, 5000));
+    
     const intentId = Number(totalBefore);
     const payment = await sdk.pay({ mandateId: agente.mandateId, passkey: agente.passkey, amount: (Number(servicio.price) / 1e18).toString(), recipient: '0xF6805F61820A860db4B7462Bc9940793fC8ed22A', gasLimit: 500000 });
     await new Promise(r => setTimeout(r, 5000));
+    
     const txSettle = await yarbox.settleIntent({ intentId, paymentNonce: payment.paymentNonce, resultHash: keccak256(toUtf8Bytes('result-' + payment.tx)) });
     await new Promise(r => setTimeout(r, 5000));
-    const ownerKey = process.env.PRIVATE_KEY || readFileSync('/home/usuariochan/agent-yarbox/.env', 'utf8').match(/PRIVATE_KEY=(.*)/)[1].trim();
+    
+    const ownerKey = process.env.PRIVATE_KEY;
+    if (!ownerKey) {
+      return res.status(500).json({ error: 'Falta PRIVATE_KEY en las variables de entorno' });
+    }
+    
     const ownerWallet = new Wallet(ownerKey, provider);
     const nftContract = new Contract('0xDE2153656df0dd9b370bc9796A5dd04Ad24BF4f8', [{ "inputs": [{ "internalType": "address", "name": "_agent", "type": "address" }, { "internalType": "uint256", "name": "_intentId", "type": "uint256" }, { "internalType": "uint256", "name": "_maxAmount", "type": "uint256" }, { "internalType": "bytes32", "name": "_paymentNonce", "type": "bytes32" }, { "internalType": "uint256", "name": "_timestamp", "type": "uint256" }], "name": "mintReceipt", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "nonpayable", "type": "function" }], ownerWallet);
     const txMint = await nftContract.mintReceipt(agente.address, intentId, servicio.price, payment.paymentNonce, Math.floor(Date.now() / 1000));
     await txMint.wait();
+    
     res.json({ ok: true, intentId, tx: payment.tx, nftTx: txMint.hash, comision: payment.fee });
   } catch (e) { res.status(500).json({ error: e.message.slice(0, 200) }); }
 });
@@ -207,9 +230,11 @@ app.post('/register-service', async (req, res) => {
   try {
     const { name, description, price, endpoint, agentId } = req.body;
     if (!name || !description || !price || !endpoint || !agentId) return res.status(400).json({ error: 'Faltan campos obligatorios' });
-    const mandatos = JSON.parse(readFileSync('/home/usuariochan/aethel-autapon/integration/mandatos-agentes.json', 'utf8'));
+    
+    const mandatos = obtenerMandatos();
     const agente = mandatos.find(m => m.agentId === agentId);
     if (!agente) return res.status(404).json({ error: 'Agente no encontrado' });
+    
     const provider = new (await import('ethers')).JsonRpcProvider('https://rpc3.monad.xyz', 143);
     const { Wallet, Contract, parseEther } = await import('ethers');
     const wallet = new Wallet(agente.privateKey, provider);
@@ -265,6 +290,7 @@ app.use(
     resourceServer
   )
 );
+
 // --- RUTA DE COMPRA CON X402 PARA SERVICIOS REALES ---
 app.get('/api/buy/:serviceId', async (req, res) => {
   try {
@@ -281,7 +307,6 @@ app.get('/api/buy/:serviceId', async (req, res) => {
       return res.status(404).json({ error: "Servicio no disponible" });
     }
 
-    // El middleware x402 ya verificó y liquidó el pago -> entregamos el servicio
     res.json({
       ok: true,
       service: {
