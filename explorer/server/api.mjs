@@ -1,4 +1,6 @@
 import express from 'express';
+import OpenAI from 'openai';
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 import db from '../indexer/db.mjs';
@@ -330,6 +332,77 @@ app.get('/api/buy/:serviceId', async (req, res) => {
 });
 
 const serverPort = process.env.PORT || 3001;
+
+// ============ ENDPOINTS FALTANTES ============
+
+app.post('/api/analizar-texto', async (req, res) => {
+  try {
+    const { texto } = req.body;
+    if (!texto) return res.status(400).json({ error: "Falta texto" });
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: "Analiza este texto y devuelve JSON con sentimiento (positivo/negativo/neutro) y resumen breve: " + texto }],
+      response_format: { type: "json_object" }
+    });
+    res.json({ ok: true, analisis: JSON.parse(completion.choices[0].message.content) });
+  } catch (e) { console.error("ERROR analizar-texto:", e); res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/validar-wallet', async (req, res) => {
+  try {
+    const { address } = req.query;
+    if (!address) return res.status(400).json({ error: "Falta address" });
+    const nfts = await client.readContract({
+      address: NFT_ADDRESS,
+      abi: NFT_ABI,
+      functionName: 'balanceOf',
+      args: [address]
+    });
+    res.json({ ok: true, address, nfts: nfts.toString(), reputacion: Number(nfts) > 0 ? "Con NFTs" : "Sin NFTs" });
+  } catch (e) { console.error("ERROR validar-wallet:", e); res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/leer-web', async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url) return res.status(400).json({ error: "Falta url" });
+    const response = await fetch(url);
+    const html = await response.text();
+    const markdown = html
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 5000);
+    res.json({ ok: true, url, markdown });
+  } catch (e) { console.error("ERROR leer-web:", e); res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/riesgo-token', async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) return res.status(400).json({ error: "Falta token" });
+    const esValida = token.startsWith('0x') && token.length === 42;
+    res.json({ ok: true, token, riesgo: esValida ? "bajo" : "alto", recomendacion: esValida ? "Token con formato valido" : "Direccion invalida" });
+  } catch (e) { console.error("ERROR riesgo-token:", e); res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/extraer-json', async (req, res) => {
+  try {
+    const { texto, esquema } = req.body;
+    if (!texto) return res.status(400).json({ error: "Falta texto" });
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: "Extrae datos estructurados de este texto. Esquema deseado: " + JSON.stringify(esquema || {}) + ". Texto: " + texto }],
+      response_format: { type: "json_object" }
+    });
+    res.json({ ok: true, datos: JSON.parse(completion.choices[0].message.content) });
+  } catch (e) { console.error("ERROR extraer-json:", e); res.status(500).json({ error: e.message }); }
+});
+
+// ============================================
+
 app.listen(serverPort, "0.0.0.0", () => {
   console.log(`Servidor AgentYarbox listo y escuchando en el puerto ${serverPort}`);
 });
