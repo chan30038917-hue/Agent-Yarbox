@@ -13,6 +13,7 @@ import { readFileSync, existsSync } from 'fs';
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
+import { facilitator } from "@coinbase/x402";
 
 // --- IMPORTAR LOS SERVICIOS ---
 import serviciosRoutes from './servicios.mjs';
@@ -290,13 +291,7 @@ app.post('/register-service', async (req, res) => {
 });
 
 // --- CONFIGURACIÓN X402 (Monad Mainnet) ---
-const facilitatorClient = new HTTPFacilitatorClient({
-  url: "https://api.cdp.coinbase.com/platform/v2/x402",
-  headers: {
-    "X-CDP-API-Key-ID": process.env.CDP_API_KEY_ID,
-    "X-CDP-API-Key-Secret": process.env.CDP_API_KEY_SECRET
-  }
-});
+const facilitatorClient = new HTTPFacilitatorClient(facilitator);
 
 const resourceServer = new x402ResourceServer(facilitatorClient)
   .register("eip155:143", new ExactEvmScheme())
