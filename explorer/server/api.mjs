@@ -291,7 +291,9 @@ app.post('/register-service', async (req, res) => {
 });
 
 // --- CONFIGURACIÓN X402 (Monad Mainnet) ---
-const facilitatorClient = new HTTPFacilitatorClient(facilitator);
+const facilitatorClient = new HTTPFacilitatorClient({
+  url: "https://x402-facilitator.molandak.org"
+});
 
 const resourceServer = new x402ResourceServer(facilitatorClient)
   .register("eip155:143", new ExactEvmScheme())
