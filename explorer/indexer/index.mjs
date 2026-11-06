@@ -62,7 +62,7 @@ for (let from = lastBlock; from <= currentBlock; from += BLOCK_CHUNK) {
       settled: 0,
       inconsistent: 0,
       reason: null,
-      block_number: Number(log.block_number),
+      block_number: Number(log.blockNumber),
       transactionHash: log.transactionHash,
     tenant_id: 'public' });
   }
@@ -80,7 +80,7 @@ for (let from = lastBlock; from <= currentBlock; from += BLOCK_CHUNK) {
       settled: 1,
       inconsistent: 0,
       reason: null,
-      block_number: Number(log.block_number),
+      block_number: Number(log.blockNumber),
       transactionHash: log.transactionHash,
     tenant_id: 'public' });
   }
@@ -98,7 +98,7 @@ for (let from = lastBlock; from <= currentBlock; from += BLOCK_CHUNK) {
       settled: 0,
       inconsistent: 1,
       reason: log.args.reason,
-      block_number: Number(log.block_number),
+      block_number: Number(log.blockNumber),
       transactionHash: log.transactionHash,
     tenant_id: 'public' });
   }

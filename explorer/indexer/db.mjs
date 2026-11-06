@@ -13,6 +13,8 @@ mkdirSync(dbDir, { recursive: true, mode: 0o777 });
 
 const db = new Database(dbPath);
 
+db.exec(`DROP INDEX IF EXISTS idx_events_unique`);
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
