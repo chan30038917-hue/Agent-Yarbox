@@ -171,6 +171,38 @@ app.get('/api/services', async (req, res) => {
       const s = await client.readContract({ address: SERVICE_DIRECTORY_ADDRESS, abi: SERVICE_DIRECTORY_ABI, functionName: 'getService', args: [i] });
       services.push({ serviceId: i.toString(), provider: s.provider, name: s.name, description: s.description, price: s.price.toString(), endpoint: s.endpoint, active: s.active, reputationRequired: s.reputationRequired.toString() });
     }
+    // Añadir servicios nuevos (no están en el contrato)
+    services.push({
+      serviceId: "10",
+      provider: "0xA0f3bFCF1A0149F8B68e9CE533a4D5178e1684c0",
+      name: "Búsqueda Web",
+      description: "Búsqueda en Google en tiempo real para agentes",
+      price: "5000000000000000",
+      endpoint: "/api/buscar-web",
+      active: true,
+      reputationRequired: "0"
+    });
+    services.push({
+      serviceId: "11",
+      provider: "0xA0f3bFCF1A0149F8B68e9CE533a4D5178e1684c0",
+      name: "Auditoría Token",
+      description: "Auditoría de seguridad de tokens en Monad",
+      price: "10000000000000000",
+      endpoint: "/api/auditar-token",
+      active: true,
+      reputationRequired: "0"
+    });
+    services.push({
+      serviceId: "12",
+      provider: "0xA0f3bFCF1A0149F8B68e9CE533a4D5178e1684c0",
+      name: "Gas Tracker",
+      description: "Precio del gas y recomendación de timing en Monad",
+      price: "2000000000000000",
+      endpoint: "/api/gas-monad",
+      active: true,
+      reputationRequired: "0"
+    });
+
     res.json({ services });
   } catch (e) { console.error("ERROR REAL:", e); res.status(500).json({ error: e.message }); }
 });
