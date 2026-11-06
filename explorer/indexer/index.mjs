@@ -106,3 +106,4 @@ for (let from = lastBlock; from <= currentBlock; from += BLOCK_CHUNK) {
 }
 
 console.log('Indexación completada.');
+// forzar rebuild Thu Nov  5 22:39:51 CST 2026
