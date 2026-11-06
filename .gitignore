@@ -18,3 +18,7 @@ test-firma.mjs
 test-pago-x402.mjs
 flujo-completo-agent-yarbox.mjs
 test-flujo-completo.mjs
+test-agente-nuevo.mjs
+test-completo.mjs
+test-ecosistema-completo.mjs
+test-real-completo.mjs
