@@ -322,6 +322,15 @@ app.use(
         },
         description: "Auditoria de seguridad de token en Monad (GoPlus + IA)",
       },
+            "GET /api/gas-monad": {
+        accepts: {
+          scheme: "exact",
+          price: "$0.002",
+          network: "eip155:143",
+          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
+        },
+        description: "Gas tracker y recomendacion de timing para Monad",
+      },
       "GET /api/buy/:serviceId": {
         accepts: {
           scheme: "exact",
@@ -598,6 +607,67 @@ app.get('/api/auditar-token', async (req, res) => {
     });
   } catch (e) {
     console.error("ERROR auditar-token:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
+// Ruta de Gas Tracker para Monad
+app.get('/api/gas-monad', async (req, res) => {
+  try {
+    // 1. Obtener el gas price actual del RPC de Monad
+    const gasPriceHex = await client.request({ method: 'eth_gasPrice' });
+    const gasPriceWei = BigInt(gasPriceHex);
+    const gasPriceGwei = Number(gasPriceWei) / 1e9;
+
+    // 2. Obtener el precio de MON en USD (de la misma fuente que /api/precio-mon)
+    let precioMON = 0.01724; // Fallback (precio aproximado de CoinMarketCap)
+    try {
+      const poolAddress = '0x8b926a72640b5766c5daa65365c24009618a91cab560946b550e4aa5ce2ae5f2';
+      const url = `https://api.geckoterminal.com/api/v2/networks/monad/pools/${poolAddress}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      precioMON = Number(data.data.attributes.base_token_price_usd) || precioMON;
+    } catch (e) {
+      console.warn("No se pudo obtener el precio de MON, usando fallback:", precioMON);
+    }
+
+    // 3. Calcular costes estimados
+    const gasLimitTransfer = 21000n; // Transferencia estándar
+    const gasLimitSwap = 150000n;    // Swap aproximado
+    const costeTransferWei = gasPriceWei * gasLimitTransfer;
+    const costeSwapWei = gasPriceWei * gasLimitSwap;
+    const costeTransferMON = Number(costeTransferWei) / 1e18;
+    const costeSwapMON = Number(costeSwapWei) / 1e18;
+    const costeTransferUSD = costeTransferMON * precioMON;
+    const costeSwapUSD = costeSwapMON * precioMON;
+
+    // 4. Recomendación (ventana barata: 02:00 - 06:00 UTC)
+    const horaUTC = new Date().getUTCHours();
+    let recomendacion = "Gas estable. Puedes ejecutar ahora.";
+    if (horaUTC >= 2 && horaUTC <= 6) {
+      recomendacion = "Ventana barata detectada (02:00-06:00 UTC). Buen momento para ejecutar.";
+    } else if (gasPriceGwei > 100) {
+      recomendacion = "Gas alto. Considera esperar a la ventana 02:00-06:00 UTC.";
+    }
+
+    res.json({
+      ok: true,
+      gasPriceGwei: gasPriceGwei.toFixed(4),
+      precioMON: precioMON.toFixed(6),
+      costeTransferencia: {
+        mon: costeTransferMON.toFixed(8),
+        usd: costeTransferUSD.toFixed(6)
+      },
+      costeSwap: {
+        mon: costeSwapMON.toFixed(8),
+        usd: costeSwapUSD.toFixed(6)
+      },
+      recomendacion: recomendacion,
+      timestamp: new Date().toISOString()
+    });
+  } catch (e) {
+    console.error("ERROR gas-monad:", e);
     res.status(500).json({ error: e.message });
   }
 });
