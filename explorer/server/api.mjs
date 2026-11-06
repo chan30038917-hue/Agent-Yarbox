@@ -486,6 +486,47 @@ try {
   console.error('No se pudo lanzar el indexador:', e.message);
 }
 
+
+// Ruta de Búsqueda Web (proxy a Serper)
+app.get('/api/buscar-web', async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query) return res.status(400).json({ error: "Falta el parámetro 'query'" });
+
+    const apiKey = process.env.SERPER_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: "Falta SERPER_API_KEY en el servidor" });
+
+    const response = await fetch("https://google.serper.dev/search", {
+      method: "POST",
+      headers: {
+        "X-API-KEY": apiKey,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ q: query, num: 10 }) // num: 10 resultados
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return res.status(response.status).json({ error: errorData.message || "Error en Serper" });
+    }
+
+    const data = await response.json();
+    res.json({
+      ok: true,
+      query: query,
+      answer: data.answerBox?.answer || data.answerBox?.snippet || data.knowledgeGraph?.description || null,
+      results: (data.organic || []).map(r => ({
+        title: r.title,
+        url: r.link,
+        snippet: r.snippet
+      }))
+    });
+  } catch (e) {
+    console.error("ERROR buscar-web:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.listen(serverPort, "0.0.0.0", () => {
   console.log(`Servidor AgentYarbox listo y escuchando en el puerto ${serverPort}`);
 });
