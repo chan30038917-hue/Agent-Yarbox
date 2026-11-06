@@ -403,6 +403,39 @@ app.post('/api/extraer-json', async (req, res) => {
 
 // ============================================
 
+
+// Ruta de clima (proxy a OpenWeatherMap)
+app.get('/api/clima', async (req, res) => {
+  try {
+    const { ciudad } = req.query;
+    if (!ciudad) return res.status(400).json({ error: "Falta el parametro ciudad" });
+
+    const apiKey = process.env.OPENWEATHER_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: "Falta OPENWEATHER_API_KEY en el servidor" });
+
+    const url = "https://api.openweathermap.org/data/2.5/weather?q=" + encodeURIComponent(ciudad) + "&units=metric&lang=es&appid=" + apiKey;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return res.status(response.status).json({ error: errorData.message });
+    }
+
+    const data = await response.json();
+    res.json({
+      ok: true,
+      ciudad: data.name,
+      temperatura: Math.round(data.main.temp),
+      descripcion: data.weather[0].description,
+      humedad: data.main.humidity,
+      viento: Math.round(data.wind.speed)
+    });
+  } catch (e) {
+    console.error("ERROR clima:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.listen(serverPort, "0.0.0.0", () => {
   console.log(`Servidor AgentYarbox listo y escuchando en el puerto ${serverPort}`);
 });
