@@ -17,3 +17,4 @@ headers.txt
 test-firma.mjs
 test-pago-x402.mjs
 flujo-completo-agent-yarbox.mjs
+test-flujo-completo.mjs
