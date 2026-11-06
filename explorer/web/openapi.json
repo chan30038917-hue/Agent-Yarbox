@@ -1,0 +1,290 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "AgentYarbox Mall API",
+    "description": "Servicios de pago por uso (x402) en Monad. Ofrece APIs de clima, an\u00e1lisis IA, seguridad de tokens, b\u00fasqueda web y m\u00e1s.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://vigilant-nourishment-production.up.railway.app"
+    }
+  ],
+  "paths": {
+    "/api/precio-mon": {
+      "get": {
+        "summary": "Precio de MON",
+        "description": "Devuelve el precio actual del token MON en USD desde GeckoTerminal.",
+        "responses": {
+          "200": {
+            "description": "Precio de MON"
+          },
+          "402": {
+            "description": "Pago requerido (x402)"
+          }
+        }
+      }
+    },
+    "/api/sentimiento-mercado": {
+      "get": {
+        "summary": "Sentimiento de mercado",
+        "description": "An\u00e1lisis de sentimiento en redes sociales sobre el mercado cripto.",
+        "responses": {
+          "200": {
+            "description": "An\u00e1lisis de sentimiento"
+          },
+          "402": {
+            "description": "Pago requerido (x402)"
+          }
+        }
+      }
+    },
+    "/api/mejor-momento": {
+      "get": {
+        "summary": "Mejor momento para operar",
+        "description": "Recomendaci\u00f3n de gas y timing para ejecutar transacciones en Monad.",
+        "responses": {
+          "200": {
+            "description": "Recomendaci\u00f3n de timing"
+          },
+          "402": {
+            "description": "Pago requerido (x402)"
+          }
+        }
+      }
+    },
+    "/api/analizar-texto": {
+      "post": {
+        "summary": "An\u00e1lisis de texto con IA",
+        "description": "Analiza un texto y devuelve el sentimiento y un resumen.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "texto": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "texto"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resultado del an\u00e1lisis"
+          },
+          "402": {
+            "description": "Pago requerido (x402)"
+          }
+        }
+      }
+    },
+    "/api/leer-web": {
+      "post": {
+        "summary": "Lector Web IA",
+        "description": "Convierte cualquier p\u00e1gina web en Markdown limpio.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "url"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contenido en Markdown"
+          },
+          "402": {
+            "description": "Pago requerido (x402)"
+          }
+        }
+      }
+    },
+    "/api/extraer-json": {
+      "post": {
+        "summary": "Extractor de JSON",
+        "description": "Extrae datos estructurados de textos desordenados usando IA.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "texto": {
+                    "type": "string"
+                  },
+                  "esquema": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "texto"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Datos estructurados"
+          },
+          "402": {
+            "description": "Pago requerido (x402)"
+          }
+        }
+      }
+    },
+    "/api/validar-wallet": {
+      "get": {
+        "summary": "Detective Wallet",
+        "description": "Valida la reputaci\u00f3n de una wallet leyendo sus NFTs de reputaci\u00f3n.",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Datos de reputaci\u00f3n"
+          },
+          "402": {
+            "description": "Pago requerido (x402)"
+          }
+        }
+      }
+    },
+    "/api/riesgo-token": {
+      "get": {
+        "summary": "Detective de Seguridad",
+        "description": "Analiza si un token es seguro o una estafa.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An\u00e1lisis de riesgo"
+          },
+          "402": {
+            "description": "Pago requerido (x402)"
+          }
+        }
+      }
+    },
+    "/api/clima": {
+      "get": {
+        "summary": "Datos del clima",
+        "description": "Devuelve temperatura, descripci\u00f3n, humedad y viento de una ciudad.",
+        "parameters": [
+          {
+            "name": "ciudad",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Datos del clima"
+          },
+          "402": {
+            "description": "Pago requerido (x402)"
+          }
+        }
+      }
+    },
+    "/api/buscar-web": {
+      "get": {
+        "summary": "B\u00fasqueda Web",
+        "description": "Busca en Google en tiempo real y devuelve resultados para agentes.",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultados de b\u00fasqueda"
+          },
+          "402": {
+            "description": "Pago requerido (x402)"
+          }
+        }
+      }
+    },
+    "/api/auditar-token": {
+      "get": {
+        "summary": "Auditor\u00eda de Token",
+        "description": "Analiza la seguridad de un token en Monad usando GoPlus e IA. Devuelve un veredicto de riesgo.",
+        "parameters": [
+          {
+            "name": "address",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Veredicto de seguridad"
+          },
+          "402": {
+            "description": "Pago requerido (x402)"
+          }
+        }
+      }
+    },
+    "/api/gas-monad": {
+      "get": {
+        "summary": "Gas Tracker Monad",
+        "description": "Precio del gas actual, coste estimado en USD y recomendaci\u00f3n de timing para transacciones en Monad.",
+        "responses": {
+          "200": {
+            "description": "Datos de gas y recomendaci\u00f3n"
+          },
+          "402": {
+            "description": "Pago requerido (x402)"
+          }
+        }
+      }
+    }
+  }
+}
