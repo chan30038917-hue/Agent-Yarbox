@@ -22,6 +22,17 @@
           "402": {
             "description": "Pago requerido (x402)"
           }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
         }
       }
     },
@@ -36,6 +47,17 @@
           "402": {
             "description": "Pago requerido (x402)"
           }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
         }
       }
     },
@@ -49,6 +71,17 @@
           },
           "402": {
             "description": "Pago requerido (x402)"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
           }
         }
       }
@@ -282,6 +315,17 @@
           },
           "402": {
             "description": "Pago requerido (x402)"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
           }
         }
       }
