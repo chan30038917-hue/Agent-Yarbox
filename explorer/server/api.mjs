@@ -259,6 +259,24 @@ const resourceServer = new x402ResourceServer(facilitatorClient)
 app.use(
   paymentMiddleware(
     {
+            "GET /api/validar-wallet": {
+        accepts: {
+          scheme: "exact",
+          price: "$0.01",
+          network: "eip155:143",
+          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
+        },
+        description: "Valida la reputacion de una wallet",
+      },
+      "GET /api/riesgo-token": {
+        accepts: {
+          scheme: "exact",
+          price: "$0.005",
+          network: "eip155:143",
+          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3",
+        },
+        description: "Analiza si un token es seguro o una estafa",
+      },
       "GET /api/premium-data": {
         accepts: {
           scheme: "exact",
