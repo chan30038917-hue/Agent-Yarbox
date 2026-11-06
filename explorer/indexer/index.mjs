@@ -3,7 +3,7 @@ import db from './db.mjs';
 
 const RPC_URL = 'https://rpc.monad.xyz';
 const CONTRACT_ADDRESS = '0x4D0D993e6FF19279dF0E69d9cd9cC946480973dC';
-const START_BLOCK = 119200000n;  // Cerca de los eventos recientes
+const START_BLOCK = 119222500n;  // Cerca de los eventos recientes
 const BLOCK_CHUNK = 100n;
 
 const client = createPublicClient({ transport: http(RPC_URL) });
@@ -22,24 +22,20 @@ const insertEvent = db.prepare(`
   INSERT OR IGNORE INTO events (
     eventName, intentId, agent, mandateId, maxAmount,
     paymentNonce, resultHash, timestamp, settled, inconsistent, reason,
-    block_number, transactionHash
+    block_number, transactionHash, tenant_id
   ) VALUES (
     @eventName, @intentId, @agent, @mandateId, @maxAmount,
     @paymentNonce, @resultHash, @timestamp, @settled, @inconsistent, @reason,
-    @block_number, @transactionHash
+    @block_number, @transactionHash, @tenant_id
   )
 `);
 
 const updateCheckpoint = db.prepare('UPDATE checkpoint SET lastBlock = ? WHERE id = 1');
 const getCheckpoint = db.prepare('SELECT lastBlock FROM checkpoint WHERE id = 1');
 
-let lastBlock = BigInt(getCheckpoint.get().lastBlock);
-// Si el checkpoint es menor que START_BLOCK, forzar START_BLOCK
-if (lastBlock < START_BLOCK) {
-  console.log('Checkpoint antiguo detectado (' + lastBlock + '), forzando START_BLOCK: ' + START_BLOCK);
-  lastBlock = START_BLOCK;
-  updateCheckpoint.run(Number(START_BLOCK));
-}
+let lastBlock = START_BLOCK;
+console.log('Forzando START_BLOCK: ' + START_BLOCK);
+updateCheckpoint.run(Number(START_BLOCK));
 const currentBlock = await client.getBlockNumber();
 console.log(`Indexando desde bloque ${lastBlock} hasta ${currentBlock}`);
 
@@ -68,7 +64,7 @@ for (let from = lastBlock; from <= currentBlock; from += BLOCK_CHUNK) {
       reason: null,
       block_number: Number(log.block_number),
       transactionHash: log.transactionHash,
-    });
+    tenant_id: 'public' });
   }
 
   for (const log of settledLogs) {
@@ -86,7 +82,7 @@ for (let from = lastBlock; from <= currentBlock; from += BLOCK_CHUNK) {
       reason: null,
       block_number: Number(log.block_number),
       transactionHash: log.transactionHash,
-    });
+    tenant_id: 'public' });
   }
 
   for (const log of inconsistentLogs) {
@@ -104,7 +100,7 @@ for (let from = lastBlock; from <= currentBlock; from += BLOCK_CHUNK) {
       reason: log.args.reason,
       block_number: Number(log.block_number),
       transactionHash: log.transactionHash,
-    });
+    tenant_id: 'public' });
   }
 
   updateCheckpoint.run(Number(to));
