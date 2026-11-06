@@ -6,10 +6,11 @@ import Database from 'better-sqlite3';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const dbDir = join(__dirname, '..', 'data');
+// Si existe DATABASE_PATH (Railway volumen), usarlo; si no, ruta local
+const dbPath = process.env.DATABASE_PATH || join(__dirname, '..', 'data', 'events.db');
+const dbDir = dirname(dbPath);
 mkdirSync(dbDir, { recursive: true, mode: 0o777 });
 
-const dbPath = join(dbDir, 'events.db');
 const db = new Database(dbPath);
 
 db.exec(`
