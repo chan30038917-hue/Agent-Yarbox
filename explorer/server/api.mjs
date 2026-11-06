@@ -353,7 +353,7 @@ app.get('/api/buy/:serviceId', async (req, res) => {
         name: s.name,
         description: s.description,
         priceMON: (Number(s.price) / 1e18).toFixed(6),
-        endpoint: s.endpoint,
+        endpoint: s.endpoint === 'https://api.clima.com' ? '/api/clima' : s.endpoint,
         reputationRequired: s.reputationRequired.toString(),
         network: "monad-mainnet",
         chainId: 143,
