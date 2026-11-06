@@ -6,18 +6,10 @@ const cobrar = (precio, moneda) => (req, res, next) => {
   if (!req.headers['payment-signature']) {
     const paymentRequired = {
       x402Version: 2,
-      accepts: [
-        {
-          scheme: "exact", network: "eip155:143", amount: precio, asset: moneda,
-          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3", maxTimeoutSeconds: 300,
-          extra: { name: "USDC", version: "2" }
-        },
-        {
-          scheme: "exact", network: "eip155:8453", amount: precio, asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-          payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3", maxTimeoutSeconds: 300,
-          extra: { name: "USD Coin", version: "2" }
-        }
-      ]
+      accepts: [{
+        scheme: "exact", network: "eip155:143", amount: precio, asset: moneda,
+        payTo: "0x38EfF524dd22E036836b43fF0992D4A75CE0e9C3", maxTimeoutSeconds: 300
+      }]
     };
     return res.status(402).set('PAYMENT-REQUIRED', Buffer.from(JSON.stringify(paymentRequired)).toString('base64')).json({ error: "Payment Required" });
   }
