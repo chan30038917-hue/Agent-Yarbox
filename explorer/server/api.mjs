@@ -472,6 +472,20 @@ app.get('/api/clima', async (req, res) => {
   }
 });
 
+
+
+
+// Lanzar el indexador en segundo plano (no bloquea la API)
+import { fork } from 'child_process';
+try {
+  const indexerPath = join(__dirname, '..', 'indexer', 'index.mjs');
+  const child = fork(indexerPath, [], { stdio: 'inherit' });
+  child.on('error', (err) => console.error('Error indexador:', err));
+  console.log('Indexador lanzado en segundo plano (PID:', child.pid, ')');
+} catch (e) {
+  console.error('No se pudo lanzar el indexador:', e.message);
+}
+
 app.listen(serverPort, "0.0.0.0", () => {
   console.log(`Servidor AgentYarbox listo y escuchando en el puerto ${serverPort}`);
 });
