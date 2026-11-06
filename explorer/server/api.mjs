@@ -33,7 +33,7 @@ const SESSION_OPTIONS = {
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
-app.use(express.static(join(__dirname, '..', 'web')));
+app.use(express.static(join(__dirname, '..', 'web'), { dotfiles: 'allow' }));
 
 // --- CONECTAR LOS SERVICIOS ---
 app.use('/api', serviciosRoutes);
